@@ -132,9 +132,3 @@ Designed specifically for Ho Chi Minh City University of Technology:
 ## 📄 License
 
 This project is for educational purposes as part of Software Engineering coursework at HCMUT.
-
----
-
-**Developed for**: Software Engineering Course - ĐH Bách Khoa TPHCM  
-**Team**: [Your Team Name]  
-**Semester**: [Current Semester]
