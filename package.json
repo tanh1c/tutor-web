@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A comprehensive tutoring platform for HCMUT students and tutors",
-  "homepage": "https://yourusername.github.io/tutor-platform",
+  "homepage": "https://tanh1c.github.io/tutor-web",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/tutor-platform.git"
+    "url": "https://github.com/tanh1c/tutor-web.git"
   },
   "scripts": {
     "dev": "vite",
