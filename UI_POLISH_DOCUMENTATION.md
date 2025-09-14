@@ -1,3 +1,8 @@
+---
+layout: page
+title: UI/UX Polish Documentation
+---
+
 # UI/UX Polish Documentation
 
 ## Tổng Quan
@@ -44,7 +49,7 @@ import { Grid } from './components/ui/Layout';
 
 <Grid 
   cols={1} 
-  responsive={{ sm: 2, lg: 4 }} 
+  responsive={%raw%}{{ sm: 2, lg: 4 }}{%endraw%} 
   gap={6}
 >
   {items.map(item => <div key={item.id}>{item.content}</div>)}
@@ -59,10 +64,10 @@ import { Flex } from './components/ui/Layout';
   direction="row" 
   align="center" 
   justify="between"
-  responsive={{
+  responsive={%raw%}{{
     base: { direction: 'col', gap: 4 },
     md: { direction: 'row', gap: 0 }
-  }}
+  }}{%endraw%}
 >
   <div>Left content</div>
   <div>Right content</div>
@@ -316,7 +321,7 @@ import { VirtualList } from './components/ui/Performance';
   itemHeight={50}
   containerHeight={400}
   renderItem={(item, index) => (
-    <div key={item.id} style={{ height: 50 }}>
+    <div key={item.id} style={%raw%}{{ height: 50 }}{%endraw%}>
       {item.name}
     </div>
   )}

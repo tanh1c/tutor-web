@@ -1,3 +1,8 @@
+---
+layout: page
+title: Deployment Guide
+---
+
 # HCMUT Tutor Platform - Deployment Guide
 
 ## 🚀 Deployment Options

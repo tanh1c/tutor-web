@@ -1,3 +1,8 @@
+---
+layout: page
+title: Advanced Features Implementation
+---
+
 # HCMUT Tutor Support Platform - Advanced Features Implementation
 
 ## 🚀 Project Overview
