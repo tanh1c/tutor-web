@@ -17,12 +17,15 @@ import Notifications from './pages/Notifications';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
-  return (
-    <UserProvider>
-      <ToastProvider>
-        <Router>
-          <div className="App">
-            <Routes>
+  console.log('App component rendering...');
+  
+  try {
+    return (
+      <UserProvider>
+        <ToastProvider>
+          <Router>
+            <div className="App">
+              <Routes>
               {/* Public routes */}
               <Route 
                 path="/login" 
@@ -233,6 +236,10 @@ function App() {
       </ToastProvider>
     </UserProvider>
   );
+  } catch (error) {
+    console.error('App rendering error:', error);
+    return <div>Error loading application. Check console for details.</div>;
+  }
 }
 
 export default App;
