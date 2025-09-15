@@ -1,7 +1,29 @@
 // Authentication utilities
 export const getCurrentUser = () => {
-  const user = localStorage.getItem('currentUser');
-  return user ? JSON.parse(user) : null;
+  try {
+    // Check if localStorage is available (for SSR compatibility)
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return null;
+    }
+    
+    const user = localStorage.getItem('currentUser');
+    console.log('getCurrentUser - raw localStorage value:', user);
+    
+    if (!user || user === 'undefined' || user === 'null') {
+      return null;
+    }
+    
+    const parsedUser = JSON.parse(user);
+    console.log('getCurrentUser - parsed user:', parsedUser);
+    return parsedUser;
+  } catch (error) {
+    console.error('getCurrentUser - Error parsing user data:', error);
+    // Clear corrupted data
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('currentUser');
+    }
+    return null;
+  }
 };
 
 export const login = (email, password, users) => {

@@ -16,12 +16,20 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('UserContext - Initializing...');
+    
     // Check for existing user session on app load
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
+    try {
+      const currentUser = getCurrentUser();
+      console.log('UserContext - Found user in localStorage:', currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+      }
+    } catch (error) {
+      console.error('UserContext - Error reading from localStorage:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (userData) => {

@@ -1,28 +1,27 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { isAuthenticated, hasRole } from '../../utils/helpers';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { UserContext } from '../../context/UserContext';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const [isChecking, setIsChecking] = useState(true);
   const location = useLocation();
+  const { user, loading } = useContext(UserContext);
 
   useEffect(() => {
     console.log('ProtectedRoute - Component mounting');
     console.log('Current path:', location.pathname);
-    console.log('localStorage at mount:', localStorage.getItem('currentUser'));
+    console.log('User from context:', user);
+    console.log('Loading from context:', loading);
     
-    // Give a brief moment for localStorage to be available
-    const timer = setTimeout(() => {
-      console.log('ProtectedRoute - Checking completed');
-      console.log('localStorage after delay:', localStorage.getItem('currentUser'));
+    // Wait for UserContext to finish loading
+    if (!loading) {
       setIsChecking(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [loading, user]);
 
   // Show loading during check
-  if (isChecking) {
+  if (isChecking || loading) {
     console.log('ProtectedRoute - Still checking...');
     return (
       <div className="min-h-screen flex items-center justify-center tutor-gradient-bg">
@@ -31,15 +30,15 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     );
   }
 
-  const isAuth = isAuthenticated();
-  console.log('ProtectedRoute - isAuthenticated result:', isAuth);
+  // Use context user instead of localStorage directly
+  console.log('ProtectedRoute - User check:', user);
   
-  if (!isAuth) {
+  if (!user) {
     console.log('ProtectedRoute - Not authenticated, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
+  if (requiredRole && user.role !== requiredRole) {
     console.log('ProtectedRoute - Role check failed, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
