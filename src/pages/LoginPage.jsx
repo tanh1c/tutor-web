@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login, isAuthenticated, getCurrentUser } from '../utils/helpers';
+import { login as helperLogin, isAuthenticated, getCurrentUser } from '../utils/helpers';
 import { users as mockUsers } from '../data/mockData';
+import { UserContext } from '../context/UserContext';
 import { HCMUTLogo, HCMUTFooter } from '../components/ui/HCMUTBrand';
 import { LoadingSpinner } from '../components/ui/Loading';
 import {
@@ -58,6 +59,9 @@ import {
 } from '@mui/icons-material';
 
 const LoginPage = () => {
+  const { login: contextLogin, user } = useContext(UserContext);
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -68,8 +72,6 @@ const LoginPage = () => {
   const [success, setSuccess] = useState(false);
   const [language, setLanguage] = useState('vi'); // 'vi' hoặc 'en'
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
-
-  const navigate = useNavigate();
 
   // Translations
   const translations = {
@@ -161,13 +163,12 @@ const LoginPage = () => {
 
   const t = translations[language];
 
-  // Check if user is already authenticated
+  // Check if user is already authenticated via context
   useEffect(() => {
     console.log('LoginPage - Component mounted, checking authentication');
-    if (isAuthenticated()) {
+    if (user) {
       console.log('LoginPage - User already authenticated, redirecting');
-      const user = getCurrentUser();
-      switch (user?.role) {
+      switch (user.role) {
         case 'student':
           navigate('/dashboard', { replace: true });
           break;
@@ -184,7 +185,7 @@ const LoginPage = () => {
           navigate('/dashboard', { replace: true });
       }
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleDemoLogin = async (email, password) => {
     console.log('Demo login triggered for:', email);
@@ -194,29 +195,22 @@ const LoginPage = () => {
     setSuccess(false);
 
     try {
-      // Clear any existing authentication before login
-      localStorage.removeItem('currentUser');
-      console.log('Cleared existing auth data for demo login');
+      // Find user in mock data
+      const foundUser = mockUsers.find(u => u.email === email && u.password === password);
+      console.log('Demo login result:', foundUser);
       
-      const user = login(email, password, mockUsers);
-      console.log('Demo login result:', user);
-      
-      if (user) {
-        // Verify localStorage is set
-        const storedUserCheck = localStorage.getItem('currentUser');
-        console.log('localStorage after demo login:', storedUserCheck);
-        
-        if (!storedUserCheck) {
-          throw new Error('Failed to store user data');
-        }
+      if (foundUser) {
+        // Use context login instead of helper
+        contextLogin(foundUser);
+        console.log('Context login completed for user:', foundUser.name);
         
         // Show success state briefly
         setSuccess(true);
         
-        // Navigate immediately
+        // Navigate after a brief delay
         setTimeout(() => {
-          console.log('Demo login navigating to dashboard for role:', user.role);
-          switch (user.role) {
+          console.log('Demo login navigating to dashboard for role:', foundUser.role);
+          switch (foundUser.role) {
             case 'student':
               navigate('/dashboard', { replace: true });
               break;
@@ -232,7 +226,7 @@ const LoginPage = () => {
             default:
               navigate('/dashboard', { replace: true });
           }
-        }, 200);
+        }, 500); // Increased delay to ensure context update
       } else {
         setError('Demo account không tìm thấy.');
       }
@@ -265,56 +259,40 @@ const LoginPage = () => {
     setSuccess(false);
 
     try {
-      // Clear any existing authentication before login
-      localStorage.removeItem('currentUser');
-      console.log('Cleared existing auth data');
-      
       console.log('Attempting login with:', formData.email, formData.password);
-      const user = login(formData.email, formData.password, mockUsers);
-      console.log('Login result:', user);
       
-      if (user) {
-        // Verify localStorage is set
-        const storedUserCheck = localStorage.getItem('currentUser');
-        console.log('localStorage after login:', storedUserCheck);
-        
-        if (!storedUserCheck) {
-          throw new Error('Failed to store user data');
-        }
+      // Find user in mock data
+      const foundUser = mockUsers.find(u => u.email === formData.email && u.password === formData.password);
+      console.log('Login result:', foundUser);
+      
+      if (foundUser) {
+        // Use context login instead of helper
+        contextLogin(foundUser);
+        console.log('Context login completed for user:', foundUser.name);
         
         // Show success state briefly
         setSuccess(true);
         
-        // Navigate immediately after successful authentication
-        const finalStoredUser = localStorage.getItem('currentUser');
-        console.log('Final check before navigation:', finalStoredUser);
-        
-        if (finalStoredUser) {
-          // Force a small delay to show success state, then navigate
-          setTimeout(() => {
-            console.log('Navigating to dashboard for role:', user.role);
-            switch (user.role) {
-              case 'student':
-                navigate('/dashboard', { replace: true });
-                break;
-              case 'tutor':
-                navigate('/tutor-dashboard', { replace: true });
-                break;
-              case 'coordinator':
-                navigate('/coordinator-dashboard', { replace: true });
-                break;
-              case 'admin':
-                navigate('/admin-dashboard', { replace: true });
-                break;
-              default:
-                navigate('/dashboard', { replace: true });
-            }
-          }, 200); // Reduced from 800ms to 200ms
-        } else {
-          console.error('localStorage verification failed after login');
-          setError('Đã xảy ra lỗi với dữ liệu đăng nhập. Vui lòng thử lại.');
-          setIsLoading(false);
-        }
+        // Navigate after successful authentication
+        setTimeout(() => {
+          console.log('Navigating to dashboard for role:', foundUser.role);
+          switch (foundUser.role) {
+            case 'student':
+              navigate('/dashboard', { replace: true });
+              break;
+            case 'tutor':
+              navigate('/tutor-dashboard', { replace: true });
+              break;
+            case 'coordinator':
+              navigate('/coordinator-dashboard', { replace: true });
+              break;
+            case 'admin':
+              navigate('/admin-dashboard', { replace: true });
+              break;
+            default:
+              navigate('/dashboard', { replace: true });
+          }
+        }, 500); // Increased delay to ensure context update
       } else {
         setError('Email hoặc mật khẩu không chính xác. Hãy thử sử dụng các tài khoản demo bên dưới.');
       }

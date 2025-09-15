@@ -14,38 +14,64 @@ export const useUser = () => {
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    // Only run once on mount
+    if (initialized) return;
+    
     console.log('UserContext - Initializing...');
     
-    // Check for existing user session on app load
-    try {
-      const currentUser = getCurrentUser();
-      console.log('UserContext - Found user in localStorage:', currentUser);
-      if (currentUser) {
-        setUser(currentUser);
+    // Use setTimeout to prevent hydration mismatch
+    const initAuth = () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('currentUser');
+          if (stored) {
+            const currentUser = JSON.parse(stored);
+            console.log('UserContext - Found user in localStorage:', currentUser);
+            setUser(currentUser);
+          }
+        }
+      } catch (error) {
+        console.error('UserContext - Error reading from localStorage:', error);
+        // Clear corrupted data
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('currentUser');
+        }
+      } finally {
+        setLoading(false);
+        setInitialized(true);
       }
-    } catch (error) {
-      console.error('UserContext - Error reading from localStorage:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    };
+
+    // Small delay to prevent SSR/hydration issues
+    const timer = setTimeout(initAuth, 100);
+    return () => clearTimeout(timer);
+  }, [initialized]);
 
   const login = (userData) => {
+    console.log('UserContext - Logging in user:', userData);
     setUser(userData);
-    localStorage.setItem('currentUser', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+    }
   };
 
   const logout = () => {
+    console.log('UserContext - Logging out user');
     setUser(null);
-    localStorage.removeItem('currentUser');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('currentUser');
+    }
   };
 
   const updateUser = (updatedUserData) => {
     const newUserData = { ...user, ...updatedUserData };
     setUser(newUserData);
-    localStorage.setItem('currentUser', JSON.stringify(newUserData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentUser', JSON.stringify(newUserData));
+    }
   };
 
   const switchRole = (newRole, users) => {
