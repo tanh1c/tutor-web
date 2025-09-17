@@ -1,18 +1,54 @@
 import { useState, useContext } from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Tabs,
+  Tab,
+  Paper,
+  Button,
+  FormControl,
+  FormControlLabel,
+  Switch,
+  Select,
+  MenuItem,
+  InputLabel,
+  Chip,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  IconButton,
+  Divider,
+  useTheme,
+  alpha,
+  Stack,
+  LinearProgress,
+  Badge,
+} from '@mui/material';
+import {
+  Notifications as NotificationsIcon,
+  Email as EmailIcon,
+  Sms as SmsIcon,
+  CalendarToday as CalendarIcon,
+  Settings as SettingsIcon,
+  TrendingUp as TrendingUpIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  Analytics as AnalyticsIcon,
+  NotificationImportant as ImportantIcon,
+  VolumeOff as VolumeOffIcon,
+  Group as GroupIcon,
+  Phone as PhoneIcon,
+} from '@mui/icons-material';
 import { UserContext } from '../context/UserContext';
 import Layout from '../components/layout/Layout';
 import NotificationCenter from '../components/notifications/NotificationCenter';
-import { 
-  BellIcon, 
-  MailIcon, 
-  MessageSquareIcon, 
-  CalendarIcon,
-  SettingsIcon,
-  TrendingUpIcon,
-  CheckCircleIcon,
-  ClockIcon
-} from 'lucide-react';
-import '../styles/notifications-theme.css';
 
 // Mock notification analytics
 const NOTIFICATION_ANALYTICS = {
@@ -52,7 +88,23 @@ const RECENT_ACTIVITY = [
 
 const Notifications = () => {
   const { user } = useContext(UserContext);
-  const [activeTab, setActiveTab] = useState('center');
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState(0);
+  const [settings, setSettings] = useState({
+    enableAll: true,
+    doNotDisturb: false,
+    smartGrouping: true,
+    emailNotifications: true,
+    smsAlerts: true,
+    pushNotifications: true,
+    sessionReminderTime: 30,
+    quietHours: '22-08',
+  });
+
+  // Theme colors matching login/dashboard
+  const primaryColor = '#1e40af';
+  const secondaryColor = '#1e3a8a';
+  const accentColor = '#1e293b';
 
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -60,328 +112,636 @@ const Notifications = () => {
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(minutes / 60);
     
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    return 'Just now';
+    if (hours > 0) return `${hours} giờ trước`;
+    if (minutes > 0) return `${minutes} phút trước`;
+    return 'Vừa xong';
   };
+
+  const handleSettingChange = (setting) => (event) => {
+    setSettings(prev => ({
+      ...prev,
+      [setting]: event.target.checked !== undefined ? event.target.checked : event.target.value
+    }));
+  };
+
+  const StatCard = ({ icon, title, value, color, subtitle, progress }) => (
+    <Card
+      sx={{
+        background: `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`,
+        color: 'white',
+        height: '100%',
+        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: `0 8px 25px ${alpha(color, 0.3)}`,
+        },
+      }}
+    >
+      <CardContent>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Box>
+            <Typography variant="h6" fontWeight="bold" mb={0.5}>
+              {title}
+            </Typography>
+            <Typography variant="h4" fontWeight="bold">
+              {value}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              backgroundColor: alpha('#fff', 0.2),
+              borderRadius: '50%',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {icon}
+          </Box>
+        </Box>
+        {subtitle && (
+          <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+            {subtitle}
+          </Typography>
+        )}
+        {progress !== undefined && (
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              backgroundColor: alpha('#fff', 0.2),
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#fff',
+              },
+            }}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const QuickStatCard = ({ icon, title, description, color }) => (
+    <Card
+      sx={{
+        p: 2,
+        height: '100%',
+        border: `2px solid ${alpha(color, 0.2)}`,
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          borderColor: color,
+          transform: 'translateY(-2px)',
+          boxShadow: `0 4px 20px ${alpha(color, 0.2)}`,
+        },
+      }}
+    >
+      <Box display="flex" alignItems="center" mb={1}>
+        <Box
+          sx={{
+            backgroundColor: alpha(color, 0.1),
+            borderRadius: '50%',
+            p: 1,
+            mr: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography variant="subtitle2" fontWeight="bold" color={color}>
+          {title}
+        </Typography>
+      </Box>
+      <Typography variant="body2" color="text.secondary">
+        {description}
+      </Typography>
+    </Card>
+  );
 
   return (
     <Layout>
-      <div className="notifications-container">
-        <div className="notifications-overlay"></div>
-        <div className="notifications-content">
+      <Box
+        sx={{
+          background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 50%, ${accentColor} 100%)`,
+          minHeight: '100vh',
+          pb: 4,
+        }}
+      >
+        <Container maxWidth="xl" sx={{ pt: 3 }}>
           {/* Header */}
-          <div className="notifications-header">
-            <div className="notifications-header-content">
-              <div className="notifications-title">
-                <div className="notifications-title-icon">
-                  <BellIcon className="h-8 w-8" />
-                </div>
-                <div>
-                  <h1>Notification Management</h1>
-                  <p className="notifications-subtitle">
-                    Manage your notifications and communication preferences
-                  </p>
-                </div>
-              </div>
-              
-              <div className="notifications-quick-stats">
-                <div className="notifications-stat-card">
-                  <div className="notifications-stat-header">
-                    <MailIcon className="h-5 w-5" />
-                    <span className="notifications-stat-title">Email Notifications</span>
-                  </div>
-                  <p className="notifications-stat-description">Enabled for all types</p>
-                </div>
-                <div className="notifications-stat-card">
-                  <div className="notifications-stat-header">
-                    <MessageSquareIcon className="h-5 w-5" />
-                    <span className="notifications-stat-title">SMS Alerts</span>
-                  </div>
-                  <p className="notifications-stat-description">High priority only</p>
-                </div>
-                <div className="notifications-stat-card">
-                  <div className="notifications-stat-header">
-                    <CalendarIcon className="h-5 w-5" />
-                    <span className="notifications-stat-title">Session Reminders</span>
-                  </div>
-                  <p className="notifications-stat-description">30 mins before</p>
-                </div>
-                <div className="notifications-stat-card">
-                  <div className="notifications-stat-header">
-                    <CheckCircleIcon className="h-5 w-5" />
-                    <span className="notifications-stat-title">Auto-responses</span>
-                  </div>
-                  <p className="notifications-stat-description">Active templates</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Box mb={4}>
+            <Box display="flex" alignItems="center" mb={2}>
+              <Avatar
+                sx={{
+                  backgroundColor: alpha('#fff', 0.2),
+                  mr: 2,
+                  width: 56,
+                  height: 56,
+                }}
+              >
+                <NotificationsIcon sx={{ fontSize: 32, color: 'white' }} />
+              </Avatar>
+              <Box>
+                <Typography
+                  variant="h4"
+                  fontWeight="bold"
+                  color="white"
+                  mb={0.5}
+                  sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+                >
+                  🔔 Quản lý Thông báo
+                </Typography>
+                <Typography variant="body1" sx={{ color: alpha('#fff', 0.9) }}>
+                  Quản lý thông báo và tùy chọn giao tiếp của bạn
+                </Typography>
+              </Box>
+            </Box>
 
-          {/* Navigation Tabs */}
-          <div className="notifications-main-card">
-            <div className="notifications-tabs">
-              <nav className="notifications-tabs-nav">
-                <button
-                  onClick={() => setActiveTab('center')}
-                  className={`notifications-tab-button ${activeTab === 'center' ? 'active' : ''}`}
-                >
-                  <BellIcon className="h-4 w-4" />
-                  <span>Notification Center</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className={`notifications-tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
-                >
-                  <TrendingUpIcon className="h-4 w-4" />
-                  <span>Analytics</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`notifications-tab-button ${activeTab === 'settings' ? 'active' : ''}`}
-                >
-                  <SettingsIcon className="h-4 w-4" />
-                  <span>Settings</span>
-                </button>
-              </nav>
-            </div>
+            {/* Quick Stats Cards */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <QuickStatCard
+                  icon={<EmailIcon sx={{ color: primaryColor }} />}
+                  title="Email Notifications"
+                  description="Bật cho tất cả loại"
+                  color={primaryColor}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <QuickStatCard
+                  icon={<SmsIcon sx={{ color: theme.palette.success.main }} />}
+                  title="SMS Alerts"
+                  description="Chỉ ưu tiên cao"
+                  color={theme.palette.success.main}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <QuickStatCard
+                  icon={<CalendarIcon sx={{ color: theme.palette.warning.main }} />}
+                  title="Nhắc nhở Session"
+                  description="Trước 30 phút"
+                  color={theme.palette.warning.main}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <QuickStatCard
+                  icon={<CheckCircleIcon sx={{ color: theme.palette.info.main }} />}
+                  title="Phản hồi tự động"
+                  description="Templates đang hoạt động"
+                  color={theme.palette.info.main}
+                />
+              </Grid>
+            </Grid>
+          </Box>
 
-            <div className="notifications-tab-content">
-              {activeTab === 'center' && <NotificationCenter />}
-              
-              {activeTab === 'analytics' && (
-                <div className="space-y-6">
-                  <h3 className="notifications-section-title">Notification Analytics</h3>
+          {/* Main Content */}
+          <Paper
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            }}
+          >
+            {/* Tabs */}
+            <Tabs
+              value={activeTab}
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiTab-root': {
+                  '&.Mui-selected': {
+                    color: primaryColor,
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: primaryColor,
+                },
+              }}
+            >
+              <Tab 
+                icon={<NotificationsIcon />} 
+                label="Notification Center" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<AnalyticsIcon />} 
+                label="Analytics" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<SettingsIcon />} 
+                label="Settings" 
+                iconPosition="start"
+              />
+            </Tabs>
+
+            {/* Tab Content */}
+            <Box sx={{ p: 3 }}>
+              {/* Notification Center Tab */}
+              {activeTab === 0 && (
+                <Box>
+                  <Typography variant="h6" mb={3} color={primaryColor}>
+                    📬 Trung tâm Thông báo
+                  </Typography>
+                  <NotificationCenter />
+                </Box>
+              )}
+
+              {/* Analytics Tab */}
+              {activeTab === 1 && (
+                <Box>
+                  <Typography variant="h6" mb={3} color={primaryColor}>
+                    📊 Phân tích Thông báo
+                  </Typography>
                   
                   {/* Analytics Overview */}
-                  <div className="notifications-analytics-grid">
-                    <div className="notifications-analytics-card">
-                      <div className="notifications-analytics-header">
-                        <span className="notifications-analytics-label">Total Sent</span>
-                        <div className="notifications-analytics-icon">
-                          <MailIcon className="h-4 w-4 text-blue-500" />
-                        </div>
-                      </div>
-                      <p className="notifications-analytics-value">{NOTIFICATION_ANALYTICS.totalSent.toLocaleString()}</p>
-                    </div>
-                    
-                    <div className="notifications-analytics-card">
-                      <div className="notifications-analytics-header">
-                        <span className="notifications-analytics-label">Delivered</span>
-                        <div className="notifications-analytics-icon">
-                          <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                        </div>
-                      </div>
-                      <p className="notifications-analytics-value">{NOTIFICATION_ANALYTICS.delivered.toLocaleString()}</p>
-                      <p className="notifications-analytics-metric positive">{NOTIFICATION_ANALYTICS.deliveryRate}% delivery rate</p>
-                    </div>
-                    
-                    <div className="notifications-analytics-card">
-                      <div className="notifications-analytics-header">
-                        <span className="notifications-analytics-label">Opened</span>
-                        <div className="notifications-analytics-icon">
-                          <TrendingUpIcon className="h-4 w-4 text-orange-500" />
-                        </div>
-                      </div>
-                      <p className="notifications-analytics-value">{NOTIFICATION_ANALYTICS.opened.toLocaleString()}</p>
-                      <p className="notifications-analytics-metric neutral">{NOTIFICATION_ANALYTICS.openRate}% open rate</p>
-                    </div>
-                    
-                    <div className="notifications-analytics-card">
-                      <div className="notifications-analytics-header">
-                        <span className="notifications-analytics-label">Clicked</span>
-                        <div className="notifications-analytics-icon">
-                          <MessageSquareIcon className="h-4 w-4 text-purple-500" />
-                        </div>
-                      </div>
-                      <p className="notifications-analytics-value">{NOTIFICATION_ANALYTICS.clicked.toLocaleString()}</p>
-                      <p className="notifications-analytics-metric neutral">{NOTIFICATION_ANALYTICS.clickRate}% click rate</p>
-                    </div>
-                  </div>
+                  <Grid container spacing={3} mb={4}>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <StatCard
+                        icon={<EmailIcon />}
+                        title="Tổng đã gửi"
+                        value={NOTIFICATION_ANALYTICS.totalSent.toLocaleString()}
+                        color={primaryColor}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <StatCard
+                        icon={<CheckCircleIcon />}
+                        title="Đã giao"
+                        value={NOTIFICATION_ANALYTICS.delivered.toLocaleString()}
+                        color={theme.palette.success.main}
+                        subtitle={`${NOTIFICATION_ANALYTICS.deliveryRate}% tỷ lệ giao`}
+                        progress={NOTIFICATION_ANALYTICS.deliveryRate}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <StatCard
+                        icon={<TrendingUpIcon />}
+                        title="Đã mở"
+                        value={NOTIFICATION_ANALYTICS.opened.toLocaleString()}
+                        color={theme.palette.warning.main}
+                        subtitle={`${NOTIFICATION_ANALYTICS.openRate}% tỷ lệ mở`}
+                        progress={NOTIFICATION_ANALYTICS.openRate}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                      <StatCard
+                        icon={<ImportantIcon />}
+                        title="Đã click"
+                        value={NOTIFICATION_ANALYTICS.clicked.toLocaleString()}
+                        color={theme.palette.info.main}
+                        subtitle={`${NOTIFICATION_ANALYTICS.clickRate}% tỷ lệ click`}
+                        progress={NOTIFICATION_ANALYTICS.clickRate}
+                      />
+                    </Grid>
+                  </Grid>
 
                   {/* Recent Activity */}
-                  <div className="notifications-activity-feed">
-                    <h4 className="notifications-activity-title">Recent Activity</h4>
-                    <div className="notifications-activity-list">
-                      {RECENT_ACTIVITY.map((activity) => (
-                        <div key={activity.id} className="notifications-activity-item">
-                          <div className="notifications-activity-content">
-                            <div className="notifications-activity-icon">
-                              <BellIcon className="h-4 w-4" />
-                            </div>
-                            <div className="notifications-activity-details">
-                              <h4>{activity.message}</h4>
-                              <p className="notifications-activity-time">
-                                <ClockIcon className="h-3 w-3" />
-                                {formatTimeAgo(activity.timestamp)}
-                              </p>
-                            </div>
-                          </div>
-                          <span className={`notifications-activity-status ${activity.status}`}>
-                            {activity.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <Card sx={{ mb: 4 }}>
+                    <CardContent>
+                      <Typography variant="h6" mb={2} color={primaryColor}>
+                        🕒 Hoạt động gần đây
+                      </Typography>
+                      <List>
+                        {RECENT_ACTIVITY.map((activity, index) => (
+                          <Box key={activity.id}>
+                            <ListItem>
+                              <ListItemIcon>
+                                <Avatar
+                                  sx={{
+                                    backgroundColor: alpha(primaryColor, 0.1),
+                                    width: 40,
+                                    height: 40,
+                                  }}
+                                >
+                                  <NotificationsIcon sx={{ color: primaryColor }} />
+                                </Avatar>
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={activity.message}
+                                secondary={
+                                  <Box display="flex" alignItems="center" gap={0.5}>
+                                    <ScheduleIcon sx={{ fontSize: 14 }} />
+                                    {formatTimeAgo(activity.timestamp)}
+                                  </Box>
+                                }
+                              />
+                              <ListItemSecondaryAction>
+                                <Chip
+                                  label={activity.status}
+                                  color="success"
+                                  size="small"
+                                  sx={{ textTransform: 'capitalize' }}
+                                />
+                              </ListItemSecondaryAction>
+                            </ListItem>
+                            {index < RECENT_ACTIVITY.length - 1 && <Divider />}
+                          </Box>
+                        ))}
+                      </List>
+                    </CardContent>
+                  </Card>
 
                   {/* Performance Chart Placeholder */}
-                  <div className="notifications-chart-placeholder">
-                    <div className="notifications-chart-content">
-                      <div className="notifications-chart-icon">
-                        <TrendingUpIcon className="h-12 w-12" />
-                      </div>
-                      <h4 className="notifications-chart-title">Notification Performance Trends</h4>
-                      <p className="notifications-chart-description">Performance chart would be displayed here</p>
-                      <p className="notifications-chart-description">Integration with analytics service required</p>
-                    </div>
-                  </div>
-                </div>
+                  <Card>
+                    <CardContent>
+                      <Box
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        py={6}
+                      >
+                        <TrendingUpIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                        <Typography variant="h6" color="text.secondary" mb={1}>
+                          📈 Xu hướng hiệu suất thông báo
+                        </Typography>
+                        <Typography variant="body2" color="text.disabled" textAlign="center">
+                          Biểu đồ hiệu suất sẽ được hiển thị tại đây
+                        </Typography>
+                        <Typography variant="body2" color="text.disabled" textAlign="center">
+                          Cần tích hợp với dịch vụ phân tích
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Box>
               )}
-            
-              {activeTab === 'settings' && (
-                <div className="space-y-6">
-                  <h3 className="notifications-section-title">Notification Preferences</h3>
+
+              {/* Settings Tab */}
+              {activeTab === 2 && (
+                <Box>
+                  <Typography variant="h6" mb={3} color={primaryColor}>
+                    ⚙️ Tùy chọn Thông báo
+                  </Typography>
                   
-                  {/* General Settings */}
-                  <div className="notifications-settings-section">
-                    <h4 className="notifications-settings-title">General Settings</h4>
-                    <div className="notifications-settings-list">
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div>
-                            <h4>Enable All Notifications</h4>
-                            <p>Master toggle for all notification types</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" defaultChecked />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                      
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div>
-                            <h4>Do Not Disturb Mode</h4>
-                            <p>Pause non-urgent notifications during study hours</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                      
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div>
-                            <h4>Smart Grouping</h4>
-                            <p>Group similar notifications to reduce clutter</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" defaultChecked />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                  <Grid container spacing={4}>
+                    {/* General Settings */}
+                    <Grid item xs={12} md={6}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" mb={3} color={primaryColor}>
+                            🔧 Cài đặt chung
+                          </Typography>
+                          <Stack spacing={2}>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={settings.enableAll}
+                                  onChange={handleSettingChange('enableAll')}
+                                  sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                      color: primaryColor,
+                                      '& + .MuiSwitch-track': {
+                                        backgroundColor: primaryColor,
+                                      },
+                                    },
+                                  }}
+                                />
+                              }
+                              label={
+                                <Box>
+                                  <Typography variant="subtitle2">Bật tất cả thông báo</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Nút chính cho tất cả loại thông báo
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={settings.doNotDisturb}
+                                  onChange={handleSettingChange('doNotDisturb')}
+                                  sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                      color: primaryColor,
+                                      '& + .MuiSwitch-track': {
+                                        backgroundColor: primaryColor,
+                                      },
+                                    },
+                                  }}
+                                />
+                              }
+                              label={
+                                <Box>
+                                  <Typography variant="subtitle2">Chế độ Không làm phiền</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Tạm dừng thông báo không khẩn cấp trong giờ học
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={settings.smartGrouping}
+                                  onChange={handleSettingChange('smartGrouping')}
+                                  sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                      color: primaryColor,
+                                      '& + .MuiSwitch-track': {
+                                        backgroundColor: primaryColor,
+                                      },
+                                    },
+                                  }}
+                                />
+                              }
+                              label={
+                                <Box>
+                                  <Typography variant="subtitle2">Nhóm thông minh</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Nhóm các thông báo tương tự để giảm lộn xộn
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
 
-                  {/* Channel Settings */}
-                  <div className="notifications-settings-section">
-                    <h4 className="notifications-settings-title">Notification Channels</h4>
-                    <div className="notifications-settings-list">
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div className="notifications-setting-icon">
-                            <MailIcon className="h-5 w-5 text-blue-500" />
-                          </div>
-                          <div className="notifications-setting-details">
-                            <h4>Email Notifications</h4>
-                            <p>Receive notifications via email</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" defaultChecked />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                      
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div className="notifications-setting-icon">
-                            <MessageSquareIcon className="h-5 w-5 text-green-500" />
-                          </div>
-                          <div className="notifications-setting-details">
-                            <h4>SMS Alerts</h4>
-                            <p>Receive urgent notifications via SMS</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" defaultChecked />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                      
-                      <div className="notifications-setting-item">
-                        <div className="notifications-setting-content">
-                          <div className="notifications-setting-icon">
-                            <BellIcon className="h-5 w-5 text-purple-500" />
-                          </div>
-                          <div className="notifications-setting-details">
-                            <h4>Push Notifications</h4>
-                            <p>Browser and mobile push notifications</p>
-                          </div>
-                        </div>
-                        <label className="notifications-toggle">
-                          <input type="checkbox" defaultChecked />
-                          <span className="notifications-toggle-slider"></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                    {/* Channel Settings */}
+                    <Grid item xs={12} md={6}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" mb={3} color={primaryColor}>
+                            📢 Kênh thông báo
+                          </Typography>
+                          <Stack spacing={2}>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                              <Box display="flex" alignItems="center">
+                                <EmailIcon sx={{ color: theme.palette.info.main, mr: 2 }} />
+                                <Box>
+                                  <Typography variant="subtitle2">Email Notifications</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Nhận thông báo qua email
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <Switch
+                                checked={settings.emailNotifications}
+                                onChange={handleSettingChange('emailNotifications')}
+                                sx={{
+                                  '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: primaryColor,
+                                    '& + .MuiSwitch-track': {
+                                      backgroundColor: primaryColor,
+                                    },
+                                  },
+                                }}
+                              />
+                            </Box>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                              <Box display="flex" alignItems="center">
+                                <SmsIcon sx={{ color: theme.palette.success.main, mr: 2 }} />
+                                <Box>
+                                  <Typography variant="subtitle2">SMS Alerts</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Nhận thông báo khẩn cấp qua SMS
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <Switch
+                                checked={settings.smsAlerts}
+                                onChange={handleSettingChange('smsAlerts')}
+                                sx={{
+                                  '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: primaryColor,
+                                    '& + .MuiSwitch-track': {
+                                      backgroundColor: primaryColor,
+                                    },
+                                  },
+                                }}
+                              />
+                            </Box>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                              <Box display="flex" alignItems="center">
+                                <NotificationsIcon sx={{ color: theme.palette.warning.main, mr: 2 }} />
+                                <Box>
+                                  <Typography variant="subtitle2">Push Notifications</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Thông báo đẩy trình duyệt và mobile
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <Switch
+                                checked={settings.pushNotifications}
+                                onChange={handleSettingChange('pushNotifications')}
+                                sx={{
+                                  '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: primaryColor,
+                                    '& + .MuiSwitch-track': {
+                                      backgroundColor: primaryColor,
+                                    },
+                                  },
+                                }}
+                              />
+                            </Box>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
 
-                  {/* Timing Settings */}
-                  <div className="notifications-settings-section">
-                    <h4 className="notifications-settings-title">Timing Preferences</h4>
-                    <div className="notifications-form-group">
-                      <div className="notifications-form-field">
-                        <label className="notifications-form-label">Session Reminder Time</label>
-                        <select className="notifications-form-select">
-                          <option value="15">15 minutes before</option>
-                          <option value="30" selected>30 minutes before</option>
-                          <option value="60">1 hour before</option>
-                          <option value="120">2 hours before</option>
-                        </select>
-                      </div>
-                      
-                      <div className="notifications-form-field">
-                        <label className="notifications-form-label">Quiet Hours</label>
-                        <select className="notifications-form-select">
-                          <option value="none">No quiet hours</option>
-                          <option value="22-08">10 PM - 8 AM</option>
-                          <option value="23-07">11 PM - 7 AM</option>
-                          <option value="00-06">12 AM - 6 AM</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+                    {/* Timing Settings */}
+                    <Grid item xs={12}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" mb={3} color={primaryColor}>
+                            ⏰ Tùy chọn thời gian
+                          </Typography>
+                          <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                              <FormControl fullWidth>
+                                <InputLabel>Thời gian nhắc nhở Session</InputLabel>
+                                <Select
+                                  value={settings.sessionReminderTime}
+                                  label="Thời gian nhắc nhở Session"
+                                  onChange={handleSettingChange('sessionReminderTime')}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      '&:hover fieldset': {
+                                        borderColor: primaryColor,
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: primaryColor,
+                                      },
+                                    },
+                                  }}
+                                >
+                                  <MenuItem value={15}>15 phút trước</MenuItem>
+                                  <MenuItem value={30}>30 phút trước</MenuItem>
+                                  <MenuItem value={60}>1 giờ trước</MenuItem>
+                                  <MenuItem value={120}>2 giờ trước</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <FormControl fullWidth>
+                                <InputLabel>Giờ yên tĩnh</InputLabel>
+                                <Select
+                                  value={settings.quietHours}
+                                  label="Giờ yên tĩnh"
+                                  onChange={handleSettingChange('quietHours')}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      '&:hover fieldset': {
+                                        borderColor: primaryColor,
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: primaryColor,
+                                      },
+                                    },
+                                  }}
+                                >
+                                  <MenuItem value="none">Không có giờ yên tĩnh</MenuItem>
+                                  <MenuItem value="22-08">10 PM - 8 AM</MenuItem>
+                                  <MenuItem value="23-07">11 PM - 7 AM</MenuItem>
+                                  <MenuItem value="00-06">12 AM - 6 AM</MenuItem>
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </Card>
+                    </Grid>
 
-                  <div className="notifications-actions">
-                    <button className="notifications-btn notifications-btn-primary">
-                      Save Preferences
-                    </button>
-                    <button className="notifications-btn notifications-btn-secondary">
-                      Reset to Defaults
-                    </button>
-                  </div>
-                </div>
+                    {/* Actions */}
+                    <Grid item xs={12}>
+                      <Box display="flex" gap={2} justifyContent="flex-end">
+                        <Button
+                          variant="outlined"
+                          sx={{
+                            borderColor: primaryColor,
+                            color: primaryColor,
+                            '&:hover': {
+                              borderColor: secondaryColor,
+                              backgroundColor: alpha(primaryColor, 0.04),
+                            },
+                          }}
+                        >
+                          Đặt lại mặc định
+                        </Button>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            backgroundColor: primaryColor,
+                            '&:hover': { backgroundColor: secondaryColor },
+                          }}
+                        >
+                          Lưu tùy chọn
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Box>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
     </Layout>
   );
 };

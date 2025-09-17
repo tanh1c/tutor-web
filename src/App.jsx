@@ -14,6 +14,9 @@ import FeedbackPage from './components/feedback/FeedbackPage';
 import AIFeatures from './pages/AIFeatures';
 import Community from './pages/Community';
 import Notifications from './pages/Notifications';
+import ManageTutorsPage from './pages/ManageTutorsPage';
+import UsersManagementPage from './pages/UsersManagementPage';
+import SystemManagementPage from './pages/SystemManagementPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
@@ -44,6 +47,15 @@ function App() {
 
               <Route 
                 path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <UserProfile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/profile/:userId" 
                 element={
                   <ProtectedRoute>
                     <UserProfile />
@@ -201,7 +213,7 @@ function App() {
               path="/manage-tutors" 
               element={
                 <ProtectedRoute requiredRole="coordinator">
-                  <div>Manage Tutors Page - Coming Soon</div>
+                  <ManageTutorsPage />
                 </ProtectedRoute>
               } 
             />
@@ -210,7 +222,16 @@ function App() {
               path="/users" 
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <div>Users Management Page - Coming Soon</div>
+                  <UsersManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/system-management" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <SystemManagementPage />
                 </ProtectedRoute>
               } 
             />

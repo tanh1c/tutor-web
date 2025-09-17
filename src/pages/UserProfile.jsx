@@ -1,4 +1,5 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 import { users as mockUsers } from '../data/mockData';
 import Layout from '../components/layout/Layout';
@@ -54,24 +55,87 @@ import {
 
 const UserProfile = () => {
   const { user: currentUser, updateUser } = useContext(UserContext);
+  const { userId } = useParams();
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ ...currentUser });
+  const [profileUser, setProfileUser] = useState(null);
+  const [editData, setEditData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = !userId || userId === currentUser?.id?.toString();
+  const canEdit = isOwnProfile || ['admin', 'coordinator'].includes(currentUser?.role);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setProfileLoading(true);
+      try {
+        if (isOwnProfile) {
+          setProfileUser(currentUser);
+          setEditData({ ...currentUser });
+        } else {
+          // Load other user's profile
+          const targetUser = mockUsers.find(u => u.id === parseInt(userId));
+          if (targetUser) {
+            setProfileUser(targetUser);
+            setEditData({ ...targetUser });
+          } else {
+            console.error('User not found');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [userId, currentUser, isOwnProfile]);
+
+  if (profileLoading) {
+    return (
+      <Layout>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+            <CircularProgress />
+          </Box>
+        </Container>
+      </Layout>
+    );
+  }
+
+  if (!profileUser) {
+    return (
+      <Layout>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Alert severity="error">Không tìm thấy thông tin người dùng</Alert>
+        </Container>
+      </Layout>
+    );
+  }
 
   const handleEdit = () => {
+    if (!canEdit) return;
     setIsEditing(true);
-    setEditData({ ...currentUser });
+    setEditData({ ...profileUser });
   };
 
   const handleSave = async () => {
+    if (!canEdit) return;
     setLoading(true);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      updateUser(editData);
+      if (isOwnProfile) {
+        updateUser(editData);
+      } else {
+        // Handle updating other user's profile (admin/coordinator action)
+        console.log('Admin updating user data:', editData);
+        setProfileUser(editData);
+      }
       setIsEditing(false);
-      console.log('Saving user data:', editData);
     } catch (error) {
       console.error('Error saving user data:', error);
     } finally {
@@ -118,7 +182,7 @@ const UserProfile = () => {
             />
           ) : (
             <Typography variant="body1" fontWeight={500}>
-              {currentUser.studentId}
+              {profileUser.studentId}
             </Typography>
           )}
         </Box>
@@ -144,7 +208,7 @@ const UserProfile = () => {
             </FormControl>
           ) : (
             <Typography variant="body1" fontWeight={500}>
-              Năm {currentUser.year}
+              Năm {profileUser.year}
             </Typography>
           )}
         </Box>
@@ -165,7 +229,7 @@ const UserProfile = () => {
             />
           ) : (
             <Typography variant="body1" fontWeight={500}>
-              {currentUser.major}
+              {profileUser.major}
             </Typography>
           )}
         </Box>
@@ -188,7 +252,7 @@ const UserProfile = () => {
             />
           ) : (
             <Typography variant="body1" fontWeight={500}>
-              {currentUser.gpa}/4.0
+              {profileUser.gpa}/4.0
             </Typography>
           )}
         </Box>
@@ -204,7 +268,7 @@ const UserProfile = () => {
             Tutor ID
           </Typography>
           <Typography variant="body1" fontWeight={500}>
-            {currentUser.studentId}
+            {profileUser.studentId}
           </Typography>
         </Box>
       </Grid>
@@ -215,7 +279,7 @@ const UserProfile = () => {
             Học phí
           </Typography>
           <Typography variant="body1" fontWeight={500} color="#1e40af">
-            {currentUser.hourlyRate?.toLocaleString()} VNĐ/giờ
+            {profileUser.hourlyRate?.toLocaleString()} VNĐ/giờ
           </Typography>
         </Box>
       </Grid>
@@ -227,30 +291,30 @@ const UserProfile = () => {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Rating
-              value={currentUser.rating || 0}
+              value={profileUser.rating || 0}
               precision={0.1}
               readOnly
               size="small"
               sx={{ color: '#ffc107' }}
             />
             <Typography variant="body1" fontWeight={500}>
-              {currentUser.rating}/5.0
+              {profileUser.rating}/5.0
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              ({currentUser.reviewCount || 0} đánh giá)
+              ({profileUser.reviewCount || 0} đánh giá)
             </Typography>
           </Box>
         </Box>
       </Grid>
 
-      {currentUser.specialties && (
+      {profileUser.specialties && (
         <Grid item xs={12}>
           <Box>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Chuyên môn
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {currentUser.specialties.map((specialty, index) => (
+              {profileUser.specialties.map((specialty, index) => (
                 <Chip
                   key={index}
                   label={specialty}
@@ -277,7 +341,7 @@ const UserProfile = () => {
             Staff ID
           </Typography>
           <Typography variant="body1" fontWeight={500}>
-            {currentUser.employeeId}
+            {profileUser.employeeId}
           </Typography>
         </Box>
       </Grid>
@@ -288,7 +352,7 @@ const UserProfile = () => {
             Phòng ban
           </Typography>
           <Typography variant="body1" fontWeight={500}>
-            {currentUser.department}
+            {profileUser.department}
           </Typography>
         </Box>
       </Grid>
@@ -303,7 +367,7 @@ const UserProfile = () => {
             Admin ID
           </Typography>
           <Typography variant="body1" fontWeight={500}>
-            {currentUser.employeeId}
+            {profileUser.employeeId}
           </Typography>
         </Box>
       </Grid>
@@ -314,7 +378,7 @@ const UserProfile = () => {
             Phòng ban
           </Typography>
           <Typography variant="body1" fontWeight={500}>
-            {currentUser.department}
+            {profileUser.department}
           </Typography>
         </Box>
       </Grid>
@@ -393,9 +457,9 @@ const UserProfile = () => {
                               mx: 'auto',
                               mb: 2
                             }}
-                            src={currentUser.avatar}
+                            src={profileUser.avatar}
                           >
-                            {!currentUser.avatar && (currentUser.name?.charAt(0) || 'U')}
+                            {!profileUser.avatar && (profileUser.name?.charAt(0) || 'U')}
                           </Avatar>
                           <Tooltip title="Thay đổi ảnh đại diện">
                             <IconButton
@@ -432,19 +496,19 @@ const UserProfile = () => {
                             mb: 1
                           }}
                         >
-                          {currentUser.name}
+                          {profileUser.name}
                         </Typography>
                         
                         <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ mb: 2 }}>
-                          {currentUser.email}
+                          {profileUser.email}
                         </Typography>
                         
                         <Chip
-                          label={getRoleDisplayName(currentUser.role)}
+                          label={getRoleDisplayName(profileUser.role)}
                           icon={
-                            currentUser.role === 'student' ? <PersonIcon /> :
-                            currentUser.role === 'tutor' ? <SchoolIcon /> :
-                            currentUser.role === 'coordinator' ? <SupervisorAccountIcon /> :
+                            profileUser.role === 'student' ? <PersonIcon /> :
+                            profileUser.role === 'tutor' ? <SchoolIcon /> :
+                            profileUser.role === 'coordinator' ? <SupervisorAccountIcon /> :
                             <AdminPanelSettingsIcon />
                           }
                           sx={{
@@ -469,7 +533,7 @@ const UserProfile = () => {
                           Thống kê nhanh
                         </Typography>
                         <Grid container spacing={2}>
-                          {currentUser.role === 'student' && (
+                          {profileUser.role === 'student' && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -483,7 +547,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h5" fontWeight={700}>
-                                    {currentUser.totalSessions || 0}
+                                    {profileUser.totalSessions || 0}
                                   </Typography>
                                   <Typography variant="caption" sx={{ opacity: 0.9 }}>
                                     Buổi học
@@ -502,7 +566,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h5" fontWeight={700}>
-                                    {currentUser.year || 1}
+                                    {profileUser.year || 1}
                                   </Typography>
                                   <Typography variant="caption" sx={{ opacity: 0.9 }}>
                                     Năm học
@@ -512,7 +576,7 @@ const UserProfile = () => {
                             </>
                           )}
                           
-                          {currentUser.role === 'tutor' && (
+                          {profileUser.role === 'tutor' && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -526,7 +590,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h5" fontWeight={700}>
-                                    {currentUser.rating || 0}
+                                    {profileUser.rating || 0}
                                   </Typography>
                                   <Typography variant="caption" sx={{ opacity: 0.9 }}>
                                     Đánh giá
@@ -545,7 +609,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h5" fontWeight={700}>
-                                    {currentUser.reviewCount || 0}
+                                    {profileUser.reviewCount || 0}
                                   </Typography>
                                   <Typography variant="caption" sx={{ opacity: 0.9 }}>
                                     Đánh giá
@@ -555,7 +619,7 @@ const UserProfile = () => {
                             </>
                           )}
 
-                          {(currentUser.role === 'coordinator' || currentUser.role === 'admin') && (
+                          {(profileUser.role === 'coordinator' || profileUser.role === 'admin') && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -766,7 +830,7 @@ const UserProfile = () => {
                                 />
                               ) : (
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.email}
+                                  {profileUser.email}
                                 </Typography>
                               )}
                             </Box>
@@ -791,7 +855,7 @@ const UserProfile = () => {
                                 />
                               ) : (
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.phone || 'Chưa cập nhật'}
+                                  {profileUser.phone || 'Chưa cập nhật'}
                                 </Typography>
                               )}
                             </Box>
@@ -817,7 +881,7 @@ const UserProfile = () => {
                                 />
                               ) : (
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.address || 'Chưa cập nhật'}
+                                  {profileUser.address || 'Chưa cập nhật'}
                                 </Typography>
                               )}
                             </Box>
@@ -851,10 +915,10 @@ const UserProfile = () => {
                           </Typography>
                         </Box>
                         
-                        {currentUser.role === 'student' && renderStudentInfo()}
-                        {currentUser.role === 'tutor' && renderTutorInfo()}
-                        {currentUser.role === 'coordinator' && renderCoordinatorInfo()}
-                        {currentUser.role === 'admin' && renderAdminInfo()}
+                        {profileUser.role === 'student' && renderStudentInfo()}
+                        {profileUser.role === 'tutor' && renderTutorInfo()}
+                        {profileUser.role === 'coordinator' && renderCoordinatorInfo()}
+                        {profileUser.role === 'admin' && renderAdminInfo()}
                       </CardContent>
                     </Card>
                   </Fade>
@@ -890,45 +954,45 @@ const UserProfile = () => {
                                 Khoa
                               </Typography>
                               <Typography variant="body1" fontWeight={500}>
-                                {currentUser.faculty}
+                                {profileUser.faculty}
                               </Typography>
                             </Box>
                           </Grid>
                           
-                          {currentUser.role === 'student' && (
+                          {profileUser.role === 'student' && (
                             <Grid item xs={12} sm={6}>
                               <Box>
                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                                   MSSV
                                 </Typography>
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.studentId}
+                                  {profileUser.studentId}
                                 </Typography>
                               </Box>
                             </Grid>
                           )}
                           
-                          {currentUser.role === 'tutor' && (
+                          {profileUser.role === 'tutor' && (
                             <Grid item xs={12} sm={6}>
                               <Box>
                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                                   Học phí
                                 </Typography>
                                 <Typography variant="body1" fontWeight={500} color="#1e40af">
-                                  {currentUser.hourlyRate?.toLocaleString()} VNĐ/giờ
+                                  {profileUser.hourlyRate?.toLocaleString()} VNĐ/giờ
                                 </Typography>
                               </Box>
                             </Grid>
                           )}
 
-                          {(currentUser.role === 'coordinator' || currentUser.role === 'admin') && (
+                          {(profileUser.role === 'coordinator' || profileUser.role === 'admin') && (
                             <Grid item xs={12} sm={6}>
                               <Box>
                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                                   ID nhân viên
                                 </Typography>
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.employeeId}
+                                  {profileUser.employeeId}
                                 </Typography>
                               </Box>
                             </Grid>
@@ -996,7 +1060,7 @@ const UserProfile = () => {
                         </Box>
                         
                         <Grid container spacing={2}>
-                          {currentUser.role === 'student' && (
+                          {profileUser.role === 'student' && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -1010,7 +1074,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h4" fontWeight={700}>
-                                    {currentUser.totalSessions || 0}
+                                    {profileUser.totalSessions || 0}
                                   </Typography>
                                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                                     Buổi học
@@ -1029,7 +1093,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h4" fontWeight={700}>
-                                    {currentUser.year || 1}
+                                    {profileUser.year || 1}
                                   </Typography>
                                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                                     Năm học
@@ -1039,7 +1103,7 @@ const UserProfile = () => {
                             </>
                           )}
                           
-                          {currentUser.role === 'tutor' && (
+                          {profileUser.role === 'tutor' && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -1053,7 +1117,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h4" fontWeight={700}>
-                                    {currentUser.rating || 0}
+                                    {profileUser.rating || 0}
                                   </Typography>
                                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                                     Đánh giá
@@ -1072,7 +1136,7 @@ const UserProfile = () => {
                                   }}
                                 >
                                   <Typography variant="h4" fontWeight={700}>
-                                    {currentUser.reviewCount || 0}
+                                    {profileUser.reviewCount || 0}
                                   </Typography>
                                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
                                     Đánh giá
@@ -1082,7 +1146,7 @@ const UserProfile = () => {
                             </>
                           )}
 
-                          {(currentUser.role === 'coordinator' || currentUser.role === 'admin') && (
+                          {(profileUser.role === 'coordinator' || profileUser.role === 'admin') && (
                             <>
                               <Grid item xs={6}>
                                 <Paper
@@ -1166,13 +1230,13 @@ const UserProfile = () => {
                               }
                               secondary={
                                 <Typography variant="body1" fontWeight={500}>
-                                  {currentUser.faculty}
+                                  {profileUser.faculty}
                                 </Typography>
                               }
                             />
                           </ListItem>
                           
-                          {currentUser.role === 'student' && (
+                          {profileUser.role === 'student' && (
                             <ListItem sx={{ px: 0, py: 1 }}>
                               <ListItemIcon>
                                 <BadgeIcon sx={{ color: '#1e40af' }} />
@@ -1185,14 +1249,14 @@ const UserProfile = () => {
                                 }
                                 secondary={
                                   <Typography variant="body1" fontWeight={500}>
-                                    {currentUser.studentId}
+                                    {profileUser.studentId}
                                   </Typography>
                                 }
                               />
                             </ListItem>
                           )}
                           
-                          {currentUser.role === 'tutor' && (
+                          {profileUser.role === 'tutor' && (
                             <ListItem sx={{ px: 0, py: 1 }}>
                               <ListItemIcon>
                                 <EmojiEventsIcon sx={{ color: '#f59e0b' }} />
@@ -1205,14 +1269,14 @@ const UserProfile = () => {
                                 }
                                 secondary={
                                   <Typography variant="body1" fontWeight={500} color="#1e40af">
-                                    {currentUser.hourlyRate?.toLocaleString()} VNĐ/giờ
+                                    {profileUser.hourlyRate?.toLocaleString()} VNĐ/giờ
                                   </Typography>
                                 }
                               />
                             </ListItem>
                           )}
 
-                          {(currentUser.role === 'coordinator' || currentUser.role === 'admin') && (
+                          {(profileUser.role === 'coordinator' || profileUser.role === 'admin') && (
                             <ListItem sx={{ px: 0, py: 1 }}>
                               <ListItemIcon>
                                 <BadgeIcon sx={{ color: '#1e40af' }} />
@@ -1225,7 +1289,7 @@ const UserProfile = () => {
                                 }
                                 secondary={
                                   <Typography variant="body1" fontWeight={500}>
-                                    {currentUser.employeeId}
+                                    {profileUser.employeeId}
                                   </Typography>
                                 }
                               />

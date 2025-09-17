@@ -1,5 +1,26 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, User, MapPin } from 'lucide-react';
+import {
+  Paper,
+  Typography,
+  Box,
+  IconButton,
+  Button,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  Tooltip,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Schedule as ClockIcon,
+  Person as UserIcon,
+  LocationOn as MapPinIcon,
+  Today as TodayIcon,
+} from '@mui/icons-material';
 import { sessions, timeSlots } from '../../data/mockData';
 import BookingModal from './BookingModal';
 
@@ -7,6 +28,11 @@ const WeeklyCalendar = ({ tutorId = null, viewMode = 'tutor' }) => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const theme = useTheme();
+
+  const primaryColor = '#1e40af';
+  const secondaryColor = '#1e3a8a';
+  const accentColor = '#1e293b';
 
   // Get start of current week (Monday)
   const getWeekStart = (date) => {
@@ -61,10 +87,34 @@ const WeeklyCalendar = ({ tutorId = null, viewMode = 'tutor' }) => {
     
     if (session) {
       switch (session.status) {
-        case 'confirmed': return 'bg-green-100 border-green-300 text-green-800';
-        case 'pending': return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-        case 'cancelled': return 'bg-red-100 border-red-300 text-red-800';
-        default: return 'bg-gray-100 border-gray-300 text-gray-600';
+        case 'confirmed': 
+          return {
+            backgroundColor: alpha(theme.palette.success.main, 0.1),
+            borderColor: theme.palette.success.main,
+            color: theme.palette.success.dark,
+            cursor: 'pointer'
+          };
+        case 'pending': 
+          return {
+            backgroundColor: alpha(theme.palette.warning.main, 0.1),
+            borderColor: theme.palette.warning.main,
+            color: theme.palette.warning.dark,
+            cursor: 'pointer'
+          };
+        case 'cancelled': 
+          return {
+            backgroundColor: alpha(theme.palette.error.main, 0.1),
+            borderColor: theme.palette.error.main,
+            color: theme.palette.error.dark,
+            cursor: 'default'
+          };
+        default: 
+          return {
+            backgroundColor: alpha(theme.palette.grey[400], 0.1),
+            borderColor: theme.palette.grey[400],
+            color: theme.palette.grey[700],
+            cursor: 'default'
+          };
       }
     }
     
@@ -75,131 +125,311 @@ const WeeklyCalendar = ({ tutorId = null, viewMode = 'tutor' }) => {
     slotDateTime.setHours(parseInt(hours), parseInt(minutes));
     
     if (slotDateTime < now) {
-      return 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed';
+      return {
+        backgroundColor: alpha(theme.palette.grey[300], 0.3),
+        borderColor: theme.palette.grey[300],
+        color: theme.palette.grey[500],
+        cursor: 'not-allowed'
+      };
     }
     
-    return 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer';
+    return {
+      backgroundColor: '#ffffff',
+      borderColor: theme.palette.grey[300],
+      color: theme.palette.text.primary,
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: alpha(primaryColor, 0.05),
+        borderColor: primaryColor,
+      }
+    };
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {viewMode === 'tutor' ? 'Lịch Dạy' : 'Lịch Học'}
-          </h2>
-          <div className="text-sm text-gray-600">
-            {weekStart.toLocaleDateString('vi-VN')} - {
-              new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')
-            }
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => navigateWeek(-1)}
-            className="p-2 rounded-md hover:bg-gray-100"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setCurrentWeek(new Date())}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Hôm nay
-          </button>
-          <button
-            onClick={() => navigateWeek(1)}
-            className="p-2 rounded-md hover:bg-gray-100"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-8 gap-1">
-        {/* Time column header */}
-        <div className="p-2 text-sm font-medium text-gray-600 text-center border-b">
-          Giờ
-        </div>
-        
-        {/* Day headers */}
-        {weekDays.map((day, index) => (
-          <div key={day.toISOString()} className="p-2 text-center border-b">
-            <div className="text-sm font-medium text-gray-600">{dayNames[index]}</div>
-            <div className="text-lg font-semibold text-gray-900">{day.getDate()}</div>
-          </div>
-        ))}
-
-        {/* Time slots */}
-        {timeSlots.map(timeSlot => (
-          <div key={timeSlot} className="contents">
-            {/* Time label */}
-            <div className="p-2 text-sm text-gray-600 text-center border-r bg-gray-50">
-              {timeSlot}
-            </div>
+    <Paper 
+      sx={{ 
+        borderRadius: 3, 
+        overflow: 'hidden',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        {/* Calendar Header */}
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Typography variant="h5" fontWeight="bold" color={primaryColor}>
+              {viewMode === 'tutor' ? '📅 Lịch Dạy' : '📚 Lịch Học'}
+            </Typography>
+            <Chip
+              label={`${weekStart.toLocaleDateString('vi-VN')} - ${
+                new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN')
+              }`}
+              sx={{
+                backgroundColor: alpha(primaryColor, 0.1),
+                color: primaryColor,
+                fontWeight: 500,
+              }}
+            />
+          </Box>
+          
+          <Box display="flex" alignItems="center" gap={1}>
+            <IconButton
+              onClick={() => navigateWeek(-1)}
+              sx={{
+                backgroundColor: alpha(primaryColor, 0.1),
+                color: primaryColor,
+                '&:hover': { backgroundColor: alpha(primaryColor, 0.2) },
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
             
-            {/* Day cells */}
-            {weekDays.map(day => {
-              const daySessions = getSessionsForDay(day);
-              const session = daySessions.find(s => s.time === timeSlot);
-              const statusClass = getTimeSlotStatus(day, timeSlot);
-              
-              return (
-                <div
-                  key={`${day.toISOString()}-${timeSlot}`}
-                  className={`p-1 border-r border-b min-h-[60px] ${statusClass}`}
-                  onClick={() => !session && !statusClass.includes('cursor-not-allowed') && handleTimeSlotClick(day, timeSlot)}
-                >
-                  {session && (
-                    <div className="text-xs p-1 rounded">
-                      <div className="font-medium truncate">
-                        {viewMode === 'tutor' ? session.studentName : session.subject}
-                      </div>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{session.duration}p</span>
-                      </div>
-                      {session.location && (
-                        <div className="flex items-center space-x-1 mt-1">
-                          <MapPin className="w-3 h-3" />
-                          <span className="truncate">{session.location}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+            <Button
+              onClick={() => setCurrentWeek(new Date())}
+              variant="contained"
+              startIcon={<TodayIcon />}
+              sx={{
+                backgroundColor: primaryColor,
+                '&:hover': { backgroundColor: secondaryColor },
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Hôm nay
+            </Button>
+            
+            <IconButton
+              onClick={() => navigateWeek(1)}
+              sx={{
+                backgroundColor: alpha(primaryColor, 0.1),
+                color: primaryColor,
+                '&:hover': { backgroundColor: alpha(primaryColor, 0.2) },
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          </Box>
+        </Box>
 
-      {/* Legend */}
-      <div className="mt-6 flex flex-wrap items-center space-x-6 text-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-          <span>Đã xác nhận</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
-          <span>Chờ xác nhận</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
-          <span>Đã hủy</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-white border border-gray-200 rounded"></div>
-          <span>Có thể đặt</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded"></div>
-          <span>Đã qua</span>
-        </div>
-      </div>
+        {/* Calendar Grid */}
+        <Paper sx={{ overflow: 'hidden', border: 1, borderColor: 'divider' }}>
+          <Grid container>
+            {/* Time column header */}
+            <Grid item xs={1.5}>
+              <Box
+                sx={{
+                  p: 2,
+                  backgroundColor: alpha(primaryColor, 0.05),
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold" color={primaryColor}>
+                  Giờ
+                </Typography>
+              </Box>
+            </Grid>
+            
+            {/* Day headers */}
+            {weekDays.map((day, index) => (
+              <Grid item xs={1.5} key={day.toISOString()}>
+                <Box
+                  sx={{
+                    p: 2,
+                    textAlign: 'center',
+                    borderBottom: 1,
+                    borderLeft: 1,
+                    borderColor: 'divider',
+                    backgroundColor: alpha(primaryColor, 0.05),
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {dayNames[index]}
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold" color={primaryColor}>
+                    {day.getDate()}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+
+            {/* Time slots */}
+            {timeSlots.map(timeSlot => (
+              <Grid container key={timeSlot}>
+                {/* Time label */}
+                <Grid item xs={1.5}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      textAlign: 'center',
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      backgroundColor: alpha(theme.palette.grey[50], 0.5),
+                      minHeight: 80,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      {timeSlot}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                {/* Day cells */}
+                {weekDays.map(day => {
+                  const daySessions = getSessionsForDay(day);
+                  const session = daySessions.find(s => s.time === timeSlot);
+                  const slotStyle = getTimeSlotStatus(day, timeSlot);
+                  
+                  return (
+                    <Grid item xs={1.5} key={`${day.toISOString()}-${timeSlot}`}>
+                      <Box
+                        sx={{
+                          p: 1,
+                          minHeight: 80,
+                          borderLeft: 1,
+                          borderBottom: 1,
+                          borderColor: 'divider',
+                          cursor: slotStyle.cursor,
+                          ...slotStyle,
+                          '&:hover': slotStyle['&:hover'],
+                        }}
+                        onClick={() => !session && slotStyle.cursor === 'pointer' && handleTimeSlotClick(day, timeSlot)}
+                      >
+                        {session && (
+                          <Card
+                            sx={{
+                              backgroundColor: 'transparent',
+                              boxShadow: 'none',
+                              height: '100%',
+                            }}
+                          >
+                            <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
+                              <Typography
+                                variant="caption"
+                                fontWeight="bold"
+                                sx={{
+                                  display: 'block',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  mb: 0.5,
+                                }}
+                              >
+                                {viewMode === 'tutor' ? session.studentName : session.subject}
+                              </Typography>
+                              
+                              <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
+                                <ClockIcon sx={{ fontSize: 12 }} />
+                                <Typography variant="caption">
+                                  {session.duration}p
+                                </Typography>
+                              </Box>
+                              
+                              {session.location && (
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                  <MapPinIcon sx={{ fontSize: 12 }} />
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {session.location}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Box>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+
+        {/* Legend */}
+        <Box mt={3} display="flex" flexWrap="wrap" gap={2}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                backgroundColor: alpha(theme.palette.success.main, 0.2),
+                border: 1,
+                borderColor: theme.palette.success.main,
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant="body2">Đã xác nhận</Typography>
+          </Box>
+          
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                backgroundColor: alpha(theme.palette.warning.main, 0.2),
+                border: 1,
+                borderColor: theme.palette.warning.main,
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant="body2">Chờ xác nhận</Typography>
+          </Box>
+          
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                backgroundColor: alpha(theme.palette.error.main, 0.2),
+                border: 1,
+                borderColor: theme.palette.error.main,
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant="body2">Đã hủy</Typography>
+          </Box>
+          
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                backgroundColor: '#ffffff',
+                border: 1,
+                borderColor: theme.palette.grey[300],
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant="body2">Có thể đặt</Typography>
+          </Box>
+          
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 16,
+                height: 16,
+                backgroundColor: alpha(theme.palette.grey[300], 0.3),
+                border: 1,
+                borderColor: theme.palette.grey[300],
+                borderRadius: 1,
+              }}
+            />
+            <Typography variant="body2">Đã qua</Typography>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Booking Modal */}
       {isBookingModalOpen && (
@@ -213,7 +443,7 @@ const WeeklyCalendar = ({ tutorId = null, viewMode = 'tutor' }) => {
           }}
         />
       )}
-    </div>
+    </Paper>
   );
 };
 

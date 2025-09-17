@@ -1,33 +1,80 @@
-import { Clock, MapPin, User, MessageCircle, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  Button,
+  Avatar,
+  Divider,
+  Stack,
+  Alert,
+  Link,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  Schedule as ClockIcon,
+  LocationOn as MapPinIcon,
+  Person as UserIcon,
+  Message as MessageCircleIcon,
+  CheckCircle,
+  Cancel as XCircleIcon,
+  Warning as AlertCircleIcon,
+} from '@mui/icons-material';
 
 const SessionCard = ({ session, viewMode = 'student', onAction }) => {
+  const theme = useTheme();
+  const primaryColor = '#1e40af';
+  const secondaryColor = '#1e3a8a';
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return {
+          backgroundColor: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.dark,
+          borderColor: theme.palette.success.main,
+        };
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return {
+          backgroundColor: alpha(theme.palette.warning.main, 0.1),
+          color: theme.palette.warning.dark,
+          borderColor: theme.palette.warning.main,
+        };
       case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return {
+          backgroundColor: alpha(theme.palette.error.main, 0.1),
+          color: theme.palette.error.dark,
+          borderColor: theme.palette.error.main,
+        };
       case 'completed':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return {
+          backgroundColor: alpha(theme.palette.info.main, 0.1),
+          color: theme.palette.info.dark,
+          borderColor: theme.palette.info.main,
+        };
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return {
+          backgroundColor: alpha(theme.palette.grey[400], 0.1),
+          color: theme.palette.grey[700],
+          borderColor: theme.palette.grey[400],
+        };
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'confirmed':
-        return <CheckCircle className="w-4 h-4" />;
+        return <CheckCircle sx={{ fontSize: 16 }} />;
       case 'pending':
-        return <AlertCircle className="w-4 h-4" />;
+        return <AlertCircleIcon sx={{ fontSize: 16 }} />;
       case 'cancelled':
-        return <XCircle className="w-4 h-4" />;
+        return <XCircleIcon sx={{ fontSize: 16 }} />;
       case 'completed':
-        return <CheckCircle className="w-4 h-4" />;
+        return <CheckCircle sx={{ fontSize: 16 }} />;
       default:
-        return <AlertCircle className="w-4 h-4" />;
+        return <AlertCircleIcon sx={{ fontSize: 16 }} />;
     }
   };
 
@@ -64,160 +111,259 @@ const SessionCard = ({ session, viewMode = 'student', onAction }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h3 className="font-medium text-gray-900 mb-1">{session.subject}</h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-1">
-              <Clock className="w-4 h-4" />
-              <span>
-                {new Date(session.date).toLocaleDateString('vi-VN')} lúc {session.time}
-              </span>
-            </div>
-            <span>({session.duration} phút)</span>
-          </div>
-        </div>
-        
-        <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(session.status)} flex items-center space-x-1`}>
-          {getStatusIcon(session.status)}
-          <span>{getStatusText(session.status)}</span>
-        </div>
-      </div>
+    <Card
+      sx={{
+        borderRadius: 3,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: 1,
+        borderColor: 'divider',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
+      <CardContent sx={{ p: 3 }}>
+        {/* Header */}
+        <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
+          <Box flex={1}>
+            <Typography variant="h6" fontWeight="bold" color="text.primary" mb={1}>
+              {session.subject}
+            </Typography>
+            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <ClockIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {new Date(session.date).toLocaleDateString('vi-VN')} lúc {session.time}
+                </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                ({session.duration} phút)
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Chip
+            icon={getStatusIcon(session.status)}
+            label={getStatusText(session.status)}
+            size="small"
+            sx={{
+              ...getStatusColor(session.status),
+              fontWeight: 500,
+              '& .MuiChip-icon': {
+                color: 'inherit',
+              },
+            }}
+          />
+        </Box>
 
-      {/* Participant Info */}
-      <div className="flex items-center space-x-3 mb-3">
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <User className="w-4 h-4" />
-          <span>
-            {viewMode === 'student' ? session.tutorName : session.studentName}
-          </span>
-        </div>
-        
-        {session.location && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <MapPin className="w-4 h-4" />
-            <span>{session.location}</span>
-          </div>
+        {/* Participant Info */}
+        <Box display="flex" alignItems="center" gap={2} mb={2} flexWrap="wrap">
+          <Box display="flex" alignItems="center" gap={1}>
+            <UserIcon sx={{ fontSize: 16, color: primaryColor }} />
+            <Typography variant="body2" color="text.secondary">
+              {viewMode === 'student' ? session.tutorName : session.studentName}
+            </Typography>
+          </Box>
+          
+          {session.location && (
+            <Box display="flex" alignItems="center" gap={1}>
+              <MapPinIcon sx={{ fontSize: 16, color: primaryColor }} />
+              <Typography variant="body2" color="text.secondary">
+                {session.location}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Price */}
+        {session.price && (
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            color={theme.palette.success.dark}
+            mb={2}
+          >
+            {formatCurrency(session.price)}
+          </Typography>
         )}
-      </div>
 
-      {/* Price */}
-      {session.price && (
-        <div className="text-sm font-medium text-green-600 mb-3">
-          {formatCurrency(session.price)}
-        </div>
-      )}
+        {/* Notes */}
+        {session.notes && (
+          <Alert
+            severity="info"
+            icon={<MessageCircleIcon />}
+            sx={{
+              mb: 2,
+              backgroundColor: alpha(theme.palette.info.main, 0.05),
+              '& .MuiAlert-icon': {
+                color: theme.palette.info.main,
+              },
+            }}
+          >
+            <Typography variant="body2">
+              {session.notes}
+            </Typography>
+          </Alert>
+        )}
 
-      {/* Notes */}
-      {session.notes && (
-        <div className="text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded">
-          <div className="flex items-start space-x-2">
-            <MessageCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>{session.notes}</span>
-          </div>
-        </div>
-      )}
+        <Divider sx={{ my: 2 }} />
 
-      {/* Action Buttons */}
-      <div className="flex space-x-2 pt-3 border-t border-gray-100">
-        {/* View Details button for all sessions */}
-        <button
-          onClick={() => onAction?.('details', session)}
-          className="px-3 py-2 border border-blue-300 text-blue-700 text-sm rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Chi tiết
-        </button>
+        {/* Action Buttons */}
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          {/* View Details button for all sessions */}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => onAction?.('details', session)}
+            sx={{
+              borderColor: primaryColor,
+              color: primaryColor,
+              '&:hover': {
+                borderColor: secondaryColor,
+                backgroundColor: alpha(primaryColor, 0.04),
+              },
+            }}
+          >
+            Chi tiết
+          </Button>
 
-        {session.status === 'pending' && viewMode === 'tutor' && (
-          <>
-            <button
-              onClick={() => onAction?.('confirm', session)}
-              className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Xác nhận
-            </button>
-            <button
+          {session.status === 'pending' && viewMode === 'tutor' && (
+            <>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => onAction?.('confirm', session)}
+                sx={{
+                  backgroundColor: theme.palette.success.main,
+                  '&:hover': { backgroundColor: theme.palette.success.dark },
+                }}
+              >
+                Xác nhận
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onAction?.('cancel', session)}
+                color="error"
+              >
+                Từ chối
+              </Button>
+            </>
+          )}
+
+          {session.status === 'pending' && viewMode === 'student' && (
+            <Button
+              variant="outlined"
+              size="small"
               onClick={() => onAction?.('cancel', session)}
-              className="flex-1 px-3 py-2 border border-red-300 text-red-700 text-sm rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+              color="error"
             >
-              Từ chối
-            </button>
-          </>
-        )}
+              Hủy đặt lịch
+            </Button>
+          )}
 
-        {session.status === 'pending' && viewMode === 'student' && (
-          <button
-            onClick={() => onAction?.('cancel', session)}
-            className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            Hủy đặt lịch
-          </button>
-        )}
+          {session.status === 'confirmed' && isUpcoming() && (
+            <>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onAction?.('reschedule', session)}
+                sx={{
+                  borderColor: primaryColor,
+                  color: primaryColor,
+                  '&:hover': {
+                    borderColor: secondaryColor,
+                    backgroundColor: alpha(primaryColor, 0.04),
+                  },
+                }}
+              >
+                Đổi lịch
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onAction?.('cancel', session)}
+                color="error"
+              >
+                Hủy
+              </Button>
+            </>
+          )}
 
-        {session.status === 'confirmed' && isUpcoming() && (
-          <>
-            <button
-              onClick={() => onAction?.('reschedule', session)}
-              className="px-3 py-2 border border-blue-300 text-blue-700 text-sm rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {session.status === 'completed' && viewMode === 'student' && !session.hasReview && (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => onAction?.('review', session)}
+              sx={{
+                backgroundColor: primaryColor,
+                '&:hover': { backgroundColor: secondaryColor },
+              }}
             >
-              Đổi lịch
-            </button>
-            <button
-              onClick={() => onAction?.('cancel', session)}
-              className="px-3 py-2 border border-red-300 text-red-700 text-sm rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+              Đánh giá
+            </Button>
+          )}
+
+          {isUpcoming() && session.status === 'confirmed' && (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => onAction?.('join', session)}
+              sx={{
+                backgroundColor: theme.palette.success.main,
+                '&:hover': { backgroundColor: theme.palette.success.dark },
+              }}
             >
-              Hủy
-            </button>
-          </>
+              {session.sessionType === 'online' ? 'Tham gia' : 'Chi tiết'}
+            </Button>
+          )}
+        </Stack>
+
+        {/* Room booking link */}
+        {session.roomId && session.roomBookingUrl && (
+          <Box mt={2} pt={2} borderTop={1} borderColor="divider">
+            <Link
+              href={session.roomBookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: primaryColor,
+                textDecoration: 'none',
+                fontSize: '0.75rem',
+                '&:hover': {
+                  textDecoration: 'underline',
+                  color: secondaryColor,
+                },
+              }}
+            >
+              📍 Xem thông tin phòng học
+            </Link>
+          </Box>
         )}
 
-        {session.status === 'completed' && viewMode === 'student' && !session.hasReview && (
-          <button
-            onClick={() => onAction?.('review', session)}
-            className="px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Đánh giá
-          </button>
+        {/* Upcoming session reminder */}
+        {isUpcoming() && (
+          <Box mt={2} pt={2} borderTop={1} borderColor="divider">
+            <Alert
+              severity="warning"
+              icon={<AlertCircleIcon />}
+              sx={{
+                backgroundColor: alpha(theme.palette.warning.main, 0.1),
+                '& .MuiAlert-icon': {
+                  color: theme.palette.warning.main,
+                },
+              }}
+            >
+              <Typography variant="caption">
+                ⏰ Sắp diễn ra - Hãy chuẩn bị sẵn sàng!
+              </Typography>
+            </Alert>
+          </Box>
         )}
-
-        {isUpcoming() && session.status === 'confirmed' && (
-          <button
-            onClick={() => onAction?.('join', session)}
-            className="px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            {session.sessionType === 'online' ? 'Tham gia' : 'Chi tiết'}
-          </button>
-        )}
-      </div>
-
-      {/* Room booking link */}
-      {session.roomId && session.roomBookingUrl && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <a
-            href={session.roomBookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-800 underline"
-          >
-            Xem thông tin phòng học
-          </a>
-        </div>
-      )}
-
-      {/* Upcoming session reminder */}
-      {isUpcoming() && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded flex items-center space-x-1">
-            <AlertCircle className="w-3 h-3" />
-            <span>
-              Sắp diễn ra - Hãy chuẩn bị sẵn sàng!
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

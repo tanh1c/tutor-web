@@ -168,22 +168,8 @@ const LoginPage = () => {
     console.log('LoginPage - Component mounted, checking authentication');
     if (user) {
       console.log('LoginPage - User already authenticated, redirecting');
-      switch (user.role) {
-        case 'student':
-          navigate('/dashboard', { replace: true });
-          break;
-        case 'tutor':
-          navigate('/tutor-dashboard', { replace: true });
-          break;
-        case 'coordinator':
-          navigate('/coordinator-dashboard', { replace: true });
-          break;
-        case 'admin':
-          navigate('/admin-dashboard', { replace: true });
-          break;
-        default:
-          navigate('/dashboard', { replace: true });
-      }
+      // All roles go to dashboard
+      navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
@@ -210,22 +196,8 @@ const LoginPage = () => {
         // Navigate after a brief delay
         setTimeout(() => {
           console.log('Demo login navigating to dashboard for role:', foundUser.role);
-          switch (foundUser.role) {
-            case 'student':
-              navigate('/dashboard', { replace: true });
-              break;
-            case 'tutor':
-              navigate('/tutor-dashboard', { replace: true });
-              break;
-            case 'coordinator':
-              navigate('/coordinator-dashboard', { replace: true });
-              break;
-            case 'admin':
-              navigate('/admin-dashboard', { replace: true });
-              break;
-            default:
-              navigate('/dashboard', { replace: true });
-          }
+          // All roles go to dashboard
+          navigate('/dashboard', { replace: true });
         }, 500); // Increased delay to ensure context update
       } else {
         setError('Demo account không tìm thấy.');
@@ -276,22 +248,8 @@ const LoginPage = () => {
         // Navigate after successful authentication
         setTimeout(() => {
           console.log('Navigating to dashboard for role:', foundUser.role);
-          switch (foundUser.role) {
-            case 'student':
-              navigate('/dashboard', { replace: true });
-              break;
-            case 'tutor':
-              navigate('/tutor-dashboard', { replace: true });
-              break;
-            case 'coordinator':
-              navigate('/coordinator-dashboard', { replace: true });
-              break;
-            case 'admin':
-              navigate('/admin-dashboard', { replace: true });
-              break;
-            default:
-              navigate('/dashboard', { replace: true });
-          }
+          // All roles go to dashboard
+          navigate('/dashboard', { replace: true });
         }, 500); // Increased delay to ensure context update
       } else {
         setError('Email hoặc mật khẩu không chính xác. Hãy thử sử dụng các tài khoản demo bên dưới.');

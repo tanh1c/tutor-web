@@ -1,8 +1,43 @@
 import { useState } from 'react';
-import { X, Clock, MapPin, User, DollarSign } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  Grid,
+  Paper,
+  Avatar,
+  Alert,
+  FormHelperText,
+  alpha,
+  useTheme
+} from '@mui/material';
+import {
+  Close as CloseIcon,
+  Schedule as ClockIcon,
+  LocationOn as MapPinIcon,
+  Person as UserIcon,
+  AttachMoney as DollarSignIcon,
+  School as BookOpenIcon
+} from '@mui/icons-material';
 import { users, rooms } from '../../data/mockData';
 
 const BookingModal = ({ timeSlot, onClose, onConfirm }) => {
+  const theme = useTheme();
+  const primaryColor = '#1e3a8a';
+  
   const [bookingData, setBookingData] = useState({
     subject: '',
     duration: 60,
@@ -78,227 +113,279 @@ const BookingModal = ({ timeSlot, onClose, onConfirm }) => {
   if (!timeSlot) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Đặt lịch học
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog
+      open={!!timeSlot}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        }
+      }}
+    >
+      {/* Header */}
+      <DialogTitle sx={{ 
+        p: 3, 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <Typography variant="h6" fontWeight="bold" color={primaryColor}>
+          Đặt lịch học
+        </Typography>
+        <Button
+          onClick={onClose}
+          sx={{ 
+            minWidth: 'auto',
+            p: 1,
+            color: 'text.secondary',
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.grey[500], 0.1),
+            }
+          }}
+        >
+          <CloseIcon />
+        </Button>
+      </DialogTitle>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <DialogContent sx={{ p: 3 }}>
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Tutor Info */}
           {tutor && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <img
-                  src={tutor.avatar}
-                  alt={tutor.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <h4 className="font-medium text-gray-900">{tutor.name}</h4>
-                  <p className="text-sm text-gray-600">{tutor.department}</p>
-                  <p className="text-sm font-medium text-blue-600">
-                    {formatCurrency(tutor.hourlyRate)}/giờ
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Card sx={{ 
+              backgroundColor: alpha(primaryColor, 0.05),
+              borderRadius: 2,
+              border: `1px solid ${alpha(primaryColor, 0.1)}`
+            }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Avatar
+                    src={tutor.avatar}
+                    alt={tutor.name}
+                    sx={{ width: 56, height: 56 }}
+                  />
+                  <Box>
+                    <Typography variant="h6" fontWeight="bold" color="text.primary">
+                      {tutor.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {tutor.department}
+                    </Typography>
+                    <Chip
+                      label={`${formatCurrency(tutor.hourlyRate)}/giờ`}
+                      size="small"
+                      sx={{
+                        backgroundColor: primaryColor,
+                        color: 'white',
+                        fontWeight: 500,
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           )}
 
           {/* Time Info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Clock className="w-4 h-4" />
-              <span>
+          <Paper sx={{ 
+            p: 3, 
+            backgroundColor: alpha(theme.palette.grey[50], 0.5),
+            borderRadius: 2
+          }}>
+            <Box display="flex" alignItems="center" gap={1} color="text.secondary">
+              <ClockIcon sx={{ fontSize: 20 }} />
+              <Typography variant="body2">
                 {timeSlot.date.toLocaleDateString('vi-VN', { 
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
                 })} lúc {timeSlot.time}
-              </span>
-            </div>
-          </div>
+              </Typography>
+            </Box>
+          </Paper>
 
           {/* Subject */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Môn học *
-            </label>
-            <input
-              type="text"
-              value={bookingData.subject}
-              onChange={(e) => setBookingData({ ...bookingData, subject: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.subject ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="VD: Toán Cao Cấp 1, Lập Trình C++"
-            />
-            {errors.subject && (
-              <p className="text-sm text-red-600 mt-1">{errors.subject}</p>
-            )}
-          </div>
+          <TextField
+            fullWidth
+            label="Môn học *"
+            value={bookingData.subject}
+            onChange={(e) => setBookingData({...bookingData, subject: e.target.value})}
+            error={!!errors.subject}
+            helperText={errors.subject}
+            variant="outlined"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: primaryColor,
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: primaryColor,
+              },
+            }}
+          />
 
           {/* Duration */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Thời lượng *
-            </label>
-            <select
+          <FormControl 
+            fullWidth 
+            error={!!errors.duration}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&.Mui-focused fieldset': {
+                  borderColor: primaryColor,
+                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: primaryColor,
+              },
+            }}
+          >
+            <InputLabel>Thời lượng *</InputLabel>
+            <Select
               value={bookingData.duration}
-              onChange={(e) => setBookingData({ ...bookingData, duration: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => setBookingData({...bookingData, duration: e.target.value})}
+              label="Thời lượng *"
             >
               {durationOptions.map(option => (
-                <option key={option.value} value={option.value}>
+                <MenuItem key={option.value} value={option.value}>
                   {option.label}
-                </option>
+                </MenuItem>
               ))}
-            </select>
+            </Select>
             {errors.duration && (
-              <p className="text-sm text-red-600 mt-1">{errors.duration}</p>
+              <FormHelperText>{errors.duration}</FormHelperText>
             )}
-          </div>
+          </FormControl>
 
           {/* Session Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hình thức học
-            </label>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="online"
-                  checked={bookingData.sessionType === 'online'}
-                  onChange={(e) => setBookingData({ ...bookingData, sessionType: e.target.value })}
-                  className="mr-2"
-                />
-                Online
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="offline"
-                  checked={bookingData.sessionType === 'offline'}
-                  onChange={(e) => setBookingData({ ...bookingData, sessionType: e.target.value })}
-                  className="mr-2"
-                />
-                Trực tiếp
-              </label>
-            </div>
-          </div>
+          <FormControl fullWidth>
+            <InputLabel>Hình thức học</InputLabel>
+            <Select
+              value={bookingData.sessionType}
+              onChange={(e) => setBookingData({...bookingData, sessionType: e.target.value})}
+              label="Hình thức học"
+            >
+              <MenuItem value="online">Online</MenuItem>
+              <MenuItem value="offline">Offline</MenuItem>
+            </Select>
+          </FormControl>
 
           {/* Location (if offline) */}
           {bookingData.sessionType === 'offline' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="subtitle2" fontWeight="medium" color="text.primary">
                 Địa điểm học *
-              </label>
+              </Typography>
               
               {/* Room Selection */}
-              <div className="mb-2">
-                <label className="block text-xs text-gray-600 mb-1">
-                  Chọn phòng có sẵn:
-                </label>
-                <select
+              <FormControl fullWidth>
+                <InputLabel>Chọn phòng có sẵn</InputLabel>
+                <Select
                   value={bookingData.roomId}
-                  onChange={(e) => {
-                    const room = rooms.find(r => r.id === parseInt(e.target.value));
-                    setBookingData({ 
-                      ...bookingData, 
-                      roomId: e.target.value,
-                      location: room ? room.name : bookingData.location
-                    });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setBookingData({...bookingData, roomId: e.target.value, location: ''})}
+                  label="Chọn phòng có sẵn"
                 >
-                  <option value="">-- Chọn phòng --</option>
+                  <MenuItem value="">-- Chọn phòng --</MenuItem>
                   {rooms.map(room => (
-                    <option key={room.id} value={room.id}>
-                      {room.name} ({room.building}) - {room.capacity} chỗ
-                    </option>
+                    <MenuItem key={room.id} value={room.id}>
+                      {room.name} - {room.location} (Sức chứa: {room.capacity})
+                    </MenuItem>
                   ))}
-                </select>
-              </div>
+                </Select>
+              </FormControl>
 
-              {/* Or custom location */}
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">
-                  Hoặc nhập địa điểm khác:
-                </label>
-                <input
-                  type="text"
-                  value={bookingData.location}
-                  onChange={(e) => setBookingData({ ...bookingData, location: e.target.value, roomId: '' })}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="VD: Café, Thư viện, ..."
-                />
-              </div>
-              
-              {errors.location && (
-                <p className="text-sm text-red-600 mt-1">{errors.location}</p>
-              )}
-            </div>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', my: 1 }}>
+                hoặc
+              </Typography>
+
+              {/* Custom Location */}
+              <TextField
+                fullWidth
+                label="Địa điểm tùy chỉnh"
+                value={bookingData.location}
+                onChange={(e) => setBookingData({...bookingData, location: e.target.value, roomId: ''})}
+                error={!!errors.location}
+                helperText={errors.location}
+                placeholder="VD: Thư viện tầng 2, Quán cà phê ABC..."
+              />
+            </Box>
           )}
 
           {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ghi chú
-            </label>
-            <textarea
-              value={bookingData.notes}
-              onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nội dung cần hỗ trợ, yêu cầu đặc biệt..."
-            />
-          </div>
+          <TextField
+            fullWidth
+            label="Ghi chú"
+            value={bookingData.notes}
+            onChange={(e) => setBookingData({...bookingData, notes: e.target.value})}
+            multiline
+            rows={3}
+            placeholder="Ghi chú thêm về buổi học..."
+          />
 
           {/* Price Summary */}
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Tổng chi phí:</span>
-              <span className="text-lg font-semibold text-green-600">
-                {formatCurrency(calculatePrice())}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {bookingData.duration} phút × {formatCurrency(tutor?.hourlyRate || 150000)}/giờ
-            </p>
-          </div>
+          <Card sx={{ 
+            backgroundColor: alpha(theme.palette.success.main, 0.05),
+            border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+            borderRadius: 2
+          }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box display="flex" justifyContent="between" alignItems="center">
+                <Box display="flex" alignItems="center" gap={1}>
+                  <DollarSignIcon sx={{ color: theme.palette.success.main, fontSize: 20 }} />
+                  <Typography variant="subtitle2" fontWeight="medium">
+                    Tổng chi phí:
+                  </Typography>
+                </Box>
+                <Typography variant="h6" fontWeight="bold" color={theme.palette.success.dark}>
+                  {formatCurrency(calculatePrice())}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                {bookingData.duration} phút × {formatCurrency(tutor?.hourlyRate || 150000)}/giờ
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
+      </DialogContent>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Đặt lịch
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <DialogActions sx={{ p: 3, borderTop: 1, borderColor: 'divider', gap: 2 }}>
+        <Button
+          onClick={onClose}
+          variant="outlined"
+          sx={{
+            borderColor: 'text.secondary',
+            color: 'text.secondary',
+            '&:hover': {
+              borderColor: 'text.primary',
+              backgroundColor: alpha(theme.palette.grey[500], 0.05),
+            }
+          }}
+        >
+          Hủy
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          onClick={handleSubmit}
+          sx={{
+            backgroundColor: primaryColor,
+            color: 'white',
+            fontWeight: 600,
+            px: 4,
+            '&:hover': {
+              backgroundColor: '#1e293b',
+            }
+          }}
+        >
+          Xác nhận đặt lịch
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

@@ -429,14 +429,15 @@ const TutorDashboard = () => {
                           <ListItem
                             key={session.id}
                             sx={{
-                              p: 2,
+                              p: 3, // Tăng padding
                               mb: 2,
                               borderRadius: 2,
                               backgroundColor: 'rgba(30, 64, 175, 0.02)',
                               border: '1px solid rgba(30, 64, 175, 0.1)',
                               '&:hover': {
                                 backgroundColor: 'rgba(30, 64, 175, 0.04)',
-                              }
+                              },
+                              minHeight: 140 // Đảm bảo chiều cao tối thiểu
                             }}
                           >
                             <ListItemAvatar>
@@ -445,17 +446,31 @@ const TutorDashboard = () => {
                               </Avatar>
                             </ListItemAvatar>
                             <ListItemText
+                              sx={{ pr: 3 }} // Thêm padding-right để tránh overlap
                               primary={
-                                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                                  {session.subject}
-                                </Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                  <Typography variant="subtitle1" sx={{ fontWeight: 600, flex: 1, pr: 2 }}>
+                                    {session.subject}
+                                  </Typography>
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    sx={{ 
+                                      backgroundColor: '#1e40af',
+                                      '&:hover': { backgroundColor: '#1e3a8a' },
+                                      flexShrink: 0 // Không cho button bị thu nhỏ
+                                    }}
+                                  >
+                                    Tham gia
+                                  </Button>
+                                </Box>
                               }
                               secondary={
-                                <Box>
-                                  <Typography variant="body2" color="text.secondary">
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                                     👨‍🎓 Học sinh: {student?.name || 'Không xác định'}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                                     🕐 Thời gian: {new Date(session.date).toLocaleTimeString('vi-VN')}
                                   </Typography>
                                   <Typography variant="body2" color="text.secondary">
@@ -464,18 +479,6 @@ const TutorDashboard = () => {
                                 </Box>
                               }
                             />
-                            <ListItemSecondaryAction>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                sx={{ 
-                                  backgroundColor: '#1e40af',
-                                  '&:hover': { backgroundColor: '#1e3a8a' }
-                                }}
-                              >
-                                Tham gia
-                              </Button>
-                            </ListItemSecondaryAction>
                           </ListItem>
                         );
                       })}

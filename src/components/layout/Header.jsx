@@ -2,24 +2,65 @@ import { useState, useRef, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { HCMUTLogo } from '../ui/HCMUTBrand';
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Tab,
+  Tabs,
+  IconButton,
+  Badge,
+  Avatar,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Typography,
+  Chip,
+  Paper,
+  List,
+  ListItem,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  Home as HomeIcon,
+  School as SchoolIcon,
+  Schedule as ScheduleIcon,
+  Group as GroupIcon,
+  SmartToy as AIIcon,
+  Notifications as NotificationsIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon,
+  SupervisorAccount as ManageIcon,
+  People as PeopleIcon,
+} from '@mui/icons-material';
 import '../../styles/header-theme.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
   const headerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user: currentUser, logout } = useContext(UserContext);
+  const theme = useTheme();
+
+  const primaryColor = '#1e40af';
+  const secondaryColor = '#1e3a8a';
 
   // Close all dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (headerRef.current && !headerRef.current.contains(event.target)) {
         setIsMenuOpen(false);
-        setIsProfileOpen(false);
-        setIsNotificationOpen(false);
+        setProfileAnchorEl(null);
+        setNotificationAnchorEl(null);
       }
     };
 
@@ -27,42 +68,61 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Toggle functions with mutual exclusivity
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-    setIsProfileOpen(false);
-    setIsNotificationOpen(false);
+  const handleProfileClick = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+    setNotificationAnchorEl(null);
   };
 
-  const toggleProfile = () => {
-    setIsProfileOpen(!isProfileOpen);
-    setIsMenuOpen(false);
-    setIsNotificationOpen(false);
+  const handleNotificationClick = (event) => {
+    setNotificationAnchorEl(event.currentTarget);
+    setProfileAnchorEl(null);
   };
 
-  const toggleNotifications = () => {
-    setIsNotificationOpen(!isNotificationOpen);
-    setIsMenuOpen(false);
-    setIsProfileOpen(false);
+  const handleCloseMenus = () => {
+    setProfileAnchorEl(null);
+    setNotificationAnchorEl(null);
   };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    handleCloseMenus();
   };
 
   const navigationItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
+    { path: '/dashboard', label: 'Dashboard', icon: <HomeIcon /> },
     ...(currentUser?.role === 'student' ? [
-      { path: '/tutors', label: 'Tìm gia sư', icon: '👨‍🏫' },
-      { path: '/schedule', label: 'Lịch học', icon: '📅' },
-      { path: '/community', label: 'Cộng đồng', icon: '👥' },
-      { path: '/ai-features', label: 'AI Assistant', icon: '🤖' },
+      { path: '/tutors', label: 'Tìm gia sư', icon: <SchoolIcon /> },
+      { path: '/schedule', label: 'Lịch học', icon: <ScheduleIcon /> },
+      { path: '/community', label: 'Cộng đồng', icon: <GroupIcon /> },
+      { path: '/ai-features', label: 'AI Assistant', icon: <AIIcon /> },
+    ] : currentUser?.role === 'coordinator' ? [
+      { path: '/manage-tutors', label: 'Quản lý gia sư', icon: <ManageIcon /> },
+      { path: '/schedule', label: 'Lịch dạy', icon: <ScheduleIcon /> },
+      { path: '/community', label: 'Cộng đồng', icon: <GroupIcon /> },
+      { path: '/ai-features', label: 'AI Assistant', icon: <AIIcon /> },
+    ] : currentUser?.role === 'admin' ? [
+      { path: '/users', label: 'Quản lý người dùng', icon: <PeopleIcon /> },
+      { path: '/manage-tutors', label: 'Quản lý gia sư', icon: <ManageIcon /> },
+      { path: '/system-management', label: 'Hệ thống', icon: <SettingsIcon /> },
+      { path: '/community', label: 'Cộng đồng', icon: <GroupIcon /> },
     ] : [
-      { path: '/schedule', label: 'Lịch dạy', icon: '📅' },
-      { path: '/community', label: 'Cộng đồng', icon: '👥' },
+      { path: '/schedule', label: 'Lịch dạy', icon: <ScheduleIcon /> },
+      { path: '/community', label: 'Cộng đồng', icon: <GroupIcon /> },
     ]),
   ];
+
+  const getCurrentTabValue = () => {
+    const currentPath = location.pathname;
+    const tabIndex = navigationItems.findIndex(item => item.path === currentPath);
+    return tabIndex >= 0 ? tabIndex : false;
+  };
+
+  const handleTabChange = (event, newValue) => {
+    if (newValue !== false && navigationItems[newValue]) {
+      navigate(navigationItems[newValue].path);
+    }
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -80,165 +140,330 @@ const Header = () => {
           />
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="nav-desktop">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive(item.path) ? 'active' : 'inactive'}`}
-            >
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Navigation with Material-UI Tabs */}
+        <Box className="nav-desktop" sx={{ display: { xs: 'none', md: 'flex' }, flexGrow: 1, justifyContent: 'center' }}>
+          <Tabs
+            value={getCurrentTabValue()}
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTab-root': {
+                color: '#1e3a8a',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                textTransform: 'none',
+                minHeight: 48,
+                opacity: 0.8,
+                '&:hover': {
+                  color: '#1e40af',
+                  opacity: 1,
+                  backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                },
+                '&.Mui-selected': {
+                  color: '#1e40af',
+                  fontWeight: 600,
+                  opacity: 1,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#1e40af',
+                height: 3,
+                borderRadius: '2px 2px 0 0',
+              },
+            }}
+          >
+            {navigationItems.map((item, index) => (
+              <Tab
+                key={item.path}
+                label={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Box>
+                }
+                sx={{ minWidth: 'auto', px: 2 }}
+              />
+            ))}
+          </Tabs>
+        </Box>
 
-        {/* Right side actions */}
-        <div className="header-actions">
+        {/* Right side actions with Material-UI */}
+        <Box display="flex" alignItems="center" gap={1}>
           {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={toggleNotifications}
-              className={`notification-btn ${isNotificationOpen ? 'active' : ''}`}
-              aria-label="Thông báo"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zm-8-3a3 3 0 01-3-3V8a3 3 0 016 0v3a3 3 0 01-3 3z" />
-              </svg>
-              <span className="notification-badge"></span>
-            </button>
+          <IconButton
+            onClick={handleNotificationClick}
+            sx={{
+              color: '#1e3a8a',
+              opacity: 0.8,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                color: '#1e40af',
+                opacity: 1,
+              },
+            }}
+          >
+            <Badge badgeContent={3} color="error" sx={{ '& .MuiBadge-badge': { fontSize: '0.75rem' } }}>
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
 
-            <div className={`dropdown-overlay notification-dropdown ${isNotificationOpen ? 'open' : ''}`}>
-              <div className="notification-header">
-                <h3 className="notification-title">Thông báo</h3>
-              </div>
-              <div className="notification-content">
-                <div className="notification-list">
-                  <div className="notification-item unread">
-                    <p className="notification-text">Buổi học mới được đặt</p>
-                    <p className="notification-time">2 phút trước</p>
-                  </div>
-                  <div className="notification-item read">
-                    <p className="notification-text">Tin nhắn từ gia sư</p>
-                    <p className="notification-time">5 phút trước</p>
-                  </div>
-                  <div className="notification-item read">
-                    <p className="notification-text">Đánh giá buổi học hoàn thành</p>
-                    <p className="notification-time">1 giờ trước</p>
-                  </div>
-                </div>
-              </div>
-              <div className="notification-footer">
-                <Link to="/notifications">Xem tất cả thông báo</Link>
-              </div>
-            </div>
-          </div>
+          {/* Notification Menu */}
+          <Menu
+            anchorEl={notificationAnchorEl}
+            open={Boolean(notificationAnchorEl)}
+            onClose={handleCloseMenus}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 320,
+                maxWidth: 400,
+                borderRadius: 2,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              },
+            }}
+          >
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="h6" color={primaryColor} fontWeight="bold" display="flex" alignItems="center" gap={1}>
+                <NotificationsIcon />
+                Thông báo
+              </Typography>
+            </Box>
+            <List sx={{ p: 0, maxHeight: 300, overflow: 'auto' }}>
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.primary" mb={0.5}>
+                    Buổi học mới được đặt
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    2 phút trước
+                  </Typography>
+                  <Chip label="Mới" color="primary" size="small" sx={{ ml: 1 }} />
+                </Box>
+              </ListItem>
+              <Divider />
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.primary" mb={0.5}>
+                    Tin nhắn từ gia sư
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    5 phút trước
+                  </Typography>
+                </Box>
+              </ListItem>
+              <Divider />
+              <ListItem sx={{ py: 1.5, px: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.primary" mb={0.5}>
+                    Đánh giá buổi học hoàn thành
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    1 giờ trước
+                  </Typography>
+                </Box>
+              </ListItem>
+            </List>
+            <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+              <Typography
+                variant="body2"
+                component={Link}
+                to="/notifications"
+                onClick={handleCloseMenus}
+                sx={{
+                  color: primaryColor,
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                Xem tất cả thông báo
+              </Typography>
+            </Box>
+          </Menu>
 
           {/* User Profile */}
-          <div className="relative">
-            <button
-              onClick={toggleProfile}
-              className={`profile-btn ${isProfileOpen ? 'active' : ''}`}
-              aria-label="Hồ sơ người dùng"
-            >
-              <div className="profile-avatar">
+          <IconButton
+            onClick={handleProfileClick}
+            sx={{
+              p: 0.5,
+              ml: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.1)',
+              },
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar
+                sx={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: '#1e40af',
+                  color: '#ffffff',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                }}
+              >
                 {currentUser?.name?.charAt(0) || 'U'}
-              </div>
-              <div className="profile-info">
-                <p className="profile-name">{currentUser?.name || 'User'}</p>
-                <p className="profile-role">{currentUser?.role || 'Student'}</p>
-              </div>
-              <svg className="w-4 h-4 text-neutral-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+              </Avatar>
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <Typography variant="body2" color="#1e3a8a" fontWeight={500} lineHeight={1.2}>
+                  {currentUser?.name || 'User'}
+                </Typography>
+                <Typography variant="caption" color="#64748b" lineHeight={1}>
+                  {currentUser?.role || 'Student'}
+                </Typography>
+              </Box>
+            </Box>
+          </IconButton>
 
-            <div className={`dropdown-overlay profile-dropdown ${isProfileOpen ? 'open' : ''}`}>
-              <div className="profile-dropdown-header">
-                <div className="flex items-center">
-                  <div className="profile-dropdown-avatar">
-                    {currentUser?.name?.charAt(0) || 'U'}
-                  </div>
-                  <div className="profile-dropdown-info">
-                    <p className="profile-dropdown-name">{currentUser?.name || 'User'}</p>
-                    <p className="profile-dropdown-email">{currentUser?.email || 'user@hcmut.edu.vn'}</p>
-                    <span className="profile-role-badge">
-                      {currentUser?.role || 'Student'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="profile-dropdown-menu">
-                <Link 
-                  to="/profile" 
-                  className="profile-menu-item"
-                  onClick={() => setIsProfileOpen(false)}
+          {/* Profile Menu */}
+          <Menu
+            anchorEl={profileAnchorEl}
+            open={Boolean(profileAnchorEl)}
+            onClose={handleCloseMenus}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 280,
+                borderRadius: 2,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              },
+            }}
+          >
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Avatar
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: '#1e40af',
+                    color: '#ffffff',
+                    fontSize: '1.25rem',
+                    fontWeight: 'bold',
+                  }}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Hồ sơ cá nhân</span>
-                </Link>
-                
-                <button className="profile-menu-item">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>Cài đặt</span>
-                </button>
-              </div>
-              
-              <div className="profile-dropdown-footer">
-                <button 
-                  onClick={handleLogout}
-                  className="profile-menu-item logout"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span>Đăng xuất</span>
-                </button>
-              </div>
-            </div>
-          </div>
+                  {currentUser?.name?.charAt(0) || 'U'}
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+                    {currentUser?.name || 'User'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {currentUser?.email || 'user@hcmut.edu.vn'}
+                  </Typography>
+                  <Chip
+                    label={currentUser?.role || 'Student'}
+                    size="small"
+                    sx={{
+                      mt: 0.5,
+                      backgroundColor: alpha(primaryColor, 0.1),
+                      color: primaryColor,
+                      fontWeight: 500,
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+            
+            <MenuItem
+              component={Link}
+              to="/profile"
+              onClick={handleCloseMenus}
+              sx={{ py: 1.5 }}
+            >
+              <ListItemIcon>
+                <PersonIcon sx={{ color: primaryColor }} />
+              </ListItemIcon>
+              <ListItemText primary="Hồ sơ cá nhân" />
+            </MenuItem>
+            
+            <MenuItem sx={{ py: 1.5 }}>
+              <ListItemIcon>
+                <SettingsIcon sx={{ color: primaryColor }} />
+              </ListItemIcon>
+              <ListItemText primary="Cài đặt" />
+            </MenuItem>
+            
+            <Divider />
+            
+            <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+              <ListItemIcon>
+                <LogoutIcon sx={{ color: 'error.main' }} />
+              </ListItemIcon>
+              <ListItemText primary="Đăng xuất" />
+            </MenuItem>
+          </Menu>
 
           {/* Mobile menu button */}
-          <button
-            onClick={toggleMenu}
-            className={`mobile-menu-btn ${isMenuOpen ? 'active' : ''}`}
-            aria-label="Menu di động"
+          <IconButton
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            sx={{
+              display: { md: 'none' },
+              color: '#1e3a8a',
+              ml: 1,
+              opacity: 0.8,
+              '&:hover': {
+                backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                color: '#1e40af',
+                opacity: 1,
+              },
+            }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-        </div>
+            {isMenuOpen ? <CloseIcon /> : <MenuIcon />}
+          </IconButton>
+        </Box>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation with Material-UI */}
       {isMenuOpen && (
-        <div className="mobile-nav">
-          <nav className="mobile-nav-list">
+        <Paper
+          sx={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            backgroundColor: 'rgba(30, 64, 175, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '0 0 16px 16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }}
+          className="mobile-nav"
+        >
+          <List sx={{ py: 2 }}>
             {navigationItems.map((item) => (
-              <Link
+              <ListItem
                 key={item.path}
+                component={Link}
                 to={item.path}
                 onClick={() => setIsMenuOpen(false)}
-                className={`mobile-nav-item ${isActive(item.path) ? 'active' : 'inactive'}`}
+                sx={{
+                  color: location.pathname === item.path ? '#ffffff' : 'rgba(255, 255, 255, 0.9)',
+                  backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                  borderRadius: 1,
+                  mx: 2,
+                  mb: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                  },
+                  textDecoration: 'none',
+                }}
               >
-                <span className="mobile-nav-icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      fontWeight: location.pathname === item.path ? 600 : 500,
+                    },
+                  }}
+                />
+              </ListItem>
             ))}
-          </nav>
-        </div>
+          </List>
+        </Paper>
       )}
     </header>
   );

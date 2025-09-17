@@ -31,8 +31,13 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   // Check role authorization
   if (requiredRole && user.role !== requiredRole) {
-    console.log('ProtectedRoute - Role check failed, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
+    // Admin can access all pages
+    if (user.role === 'admin') {
+      // Admin has full access, continue
+    } else {
+      console.log('ProtectedRoute - Role check failed, redirecting to dashboard');
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   console.log('ProtectedRoute - Authentication passed, rendering children');
